@@ -1,14 +1,14 @@
 "use client";
 
 import { useTable } from "@refinedev/antd";
-import { Table, Typography, Card, Button, Form, Input } from "antd";
-import { PlusOutlined, EnvironmentOutlined, SearchOutlined } from "@ant-design/icons";
+import { Table, Typography, Card, Form, Input } from "antd";
+import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { EditButton, DeleteButton, ShowButton, Breadcrumb, CreateButton } from "@refinedev/antd";
 import { useSearchParams } from "next/navigation";
 
 const { Title, Text } = Typography;
 
-export default function MillList() {
+export default function ZoneList() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
   const { tableProps, searchFormProps } = useTable({
@@ -36,30 +36,30 @@ export default function MillList() {
   });
 
   return (
-    <div style={{ padding: '32px 40px', maxWidth: 1400, margin: "0 auto", minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ padding: "32px 40px", maxWidth: 1400, margin: "0 auto", minHeight: "calc(100vh - 64px)" }}>
       <div style={{ marginBottom: 16 }}><Breadcrumb /></div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
         <div>
-          <Title level={2} style={{ margin: '0 0 8px 0', fontWeight: 700 }}>
-            Factory / Mill Locations
+          <Title level={2} style={{ margin: "0 0 8px 0", fontWeight: 700 }}>
+            Zone Master Data
           </Title>
         </div>
         <CreateButton
           type="default"
           icon={<PlusOutlined />}
-          style={{ height: '40px', padding: '0 20px', fontWeight: 500, borderRadius: '6px' }}
+          style={{ height: "40px", padding: "0 20px", fontWeight: 500, borderRadius: "6px" }}
         >
-          Add Mill
+          Add Zone
         </CreateButton>
       </div>
 
-      <Card variant="borderless" className="no-padding-card" style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-        <div style={{ padding: '16px', borderBottom: '1px solid var(--ant-color-border-secondary)' }}>
+      <Card variant="borderless" className="no-padding-card" style={{ borderRadius: "12px", overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+        <div style={{ padding: "16px", borderBottom: "1px solid var(--ant-color-border-secondary)" }}>
           <Form {...(searchFormProps as any)} layout="inline" onValuesChange={() => searchFormProps.form?.submit()}>
             <Form.Item name="q" style={{ margin: 0 }}>
               <Input
                 prefix={<SearchOutlined style={{ color: "var(--ant-color-text-secondary)", marginRight: 8 }} />}
-                placeholder="Search all data..."
+                placeholder="Search zone name..."
                 allowClear
                 style={{ width: 360, borderRadius: "8px" }}
                 onPressEnter={() => searchFormProps.form?.submit()}
@@ -73,15 +73,14 @@ export default function MillList() {
           pagination={{
             ...(tableProps.pagination || {}),
             position: undefined,
-            style: { padding: '16px' },
+            style: { padding: "16px" },
             showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50", "100"]
+            pageSizeOptions: ["10", "20", "50", "100"],
           } as any}
-          scroll={{ x: 'max-content' }}
+          scroll={{ x: "max-content" }}
         >
           <Table.Column dataIndex="id" title="ID" width={80} />
-          <Table.Column dataIndex="code" title="Mill Code" width={200} render={val => <Text strong>{val}</Text>} />
-          <Table.Column dataIndex="name" title="Mill Name" />
+          <Table.Column dataIndex="name" title="Zone Name" render={(val) => <Text strong>{val}</Text>} />
           <Table.Column
             title="Actions"
             dataIndex="actions"

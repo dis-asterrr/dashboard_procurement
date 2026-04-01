@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useShow, useList } from "@refinedev/core";
 import { Breadcrumb, ListButton, EditButton } from "@refinedev/antd";
-import { Typography, Row, Col, Card, Tag, Table, Empty, Descriptions, Statistic, Space, Flex, Spin, Tabs, Button, theme } from "antd";
+import { Typography, Row, Col, Card, Tag, Table, Empty, Descriptions, Statistic, Space, Flex, Tabs, Button, theme } from "antd";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@ant-design/icons";
 import { App, Form, Input, Divider, Timeline } from "antd";
 import { apiClient } from "@/lib/api-client";
+import AppSpinner from "@/components/common/app-spinner";
 
 const { Title, Text } = Typography;
 
@@ -119,7 +120,7 @@ export default function MillShow() {
     { title: "Validity", key: "validity", render: (_: any, r: any) => <Text type="secondary" style={{ fontSize: 13 }}>{formatDate(r.validity_start)} to {formatDate(r.validity_end)}</Text> },
   ];
 
-  if (isLoading) return <div style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin size="large" /></div>;
+  if (isLoading) return <div style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AppSpinner text="Loading mill details..." /></div>;
 
   return (
     <div style={{ padding: '32px 40px', maxWidth: 1400, margin: "0 auto", minHeight: '100vh' }}>
@@ -241,7 +242,7 @@ export default function MillShow() {
                     </Col>
                     <Col xs={24} md={14}>
                       <Title level={5} style={{ marginTop: 0 }}>Timeline</Title>
-                      {logsLoading ? <Spin /> : (auditLogs?.length ?? 0) === 0 ? <Empty /> : (
+                      {logsLoading ? <AppSpinner text="" /> : (auditLogs?.length ?? 0) === 0 ? <Empty /> : (
                         <Timeline
                           items={auditLogs.map(log => ({
                             key: log.id,

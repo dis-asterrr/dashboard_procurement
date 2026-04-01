@@ -4,7 +4,7 @@ import { useShow, useList, useInvalidate } from "@refinedev/core";
 import { Breadcrumb, ListButton, EditButton } from "@refinedev/antd";
 import {
   Typography, Row, Col, Card, Tag, Table, Empty, Descriptions,
-  Statistic, Space, Flex, Spin, Tabs, Divider, Button, Form, Input, Timeline, App, theme
+  Statistic, Space, Flex, Tabs, Divider, Button, Form, Input, Timeline, App, theme
 } from "antd";
 import {
   FileDoneOutlined, NodeIndexOutlined,
@@ -15,6 +15,7 @@ import {
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import { apiClient } from "@/lib/api-client";
+import AppSpinner from "@/components/common/app-spinner";
 
 const { Title, Text } = Typography;
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
@@ -143,7 +144,7 @@ export default function VendorShow() {
     { title: "Status", dataIndex: "status", key: "status", render: (s: any) => <Tag color={s === 'active' ? 'blue' : 'default'} variant="filled">{s?.toUpperCase()}</Tag> }
   ];
 
-  if (vendorLoading) return <div style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin size="large" /></div>;
+  if (vendorLoading) return <div style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AppSpinner text="Loading vendor details..." /></div>;
 
   return (
     <div style={{ padding: '32px 40px', maxWidth: 1400, margin: "0 auto", minHeight: '100vh' }}>
@@ -193,11 +194,11 @@ export default function VendorShow() {
               </Card>
             </Col>
             <Col xs={24} md={8}>
-              <Card styles={{ body: { padding: '24px' } }} style={{ height: 110, borderRadius: 12, border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowTertiary }}>
+              <Card styles={{ body: { padding: '20px' } }} style={{ height: 110, borderRadius: 12, border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowTertiary }}>
                 <Flex justify="space-between" align="center">
                   <div>
                     <Text type="secondary" style={{ fontSize: 13, fontWeight: 600 }}>Total Active Contracts</Text>
-                    <Title level={2} style={{ margin: '8px 0 0 0', color: token.colorText }}>{totalActive}</Title>
+                    <Title level={3} style={{ margin: '8px 0 0 0', color: token.colorText }}>{totalActive}</Title>
                   </div>
                   <div style={{ padding: '12px', backgroundColor: token.colorPrimaryBg, borderRadius: '50%' }}>
                     <FileDoneOutlined style={{ fontSize: 24, color: token.colorPrimary }} />
@@ -206,7 +207,7 @@ export default function VendorShow() {
               </Card>
             </Col>
             <Col xs={24} md={8}>
-              <Card styles={{ body: { padding: '24px' } }} style={{ height: 110, borderRadius: 12, border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowTertiary }}>
+              <Card styles={{ body: { padding: '20px' } }} style={{ height: 110, borderRadius: 12, border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowTertiary }}>
                 <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
                   <div>
                     <Text type="secondary" style={{ fontSize: 13, fontWeight: 600 }}>Total Estimated Spend</Text>
@@ -269,7 +270,7 @@ export default function VendorShow() {
                     </Col>
                     <Col xs={24} md={14}>
                       <Title level={5} style={{ marginTop: 0 }}>Timeline</Title>
-                      {logsLoading ? <Spin /> : (auditLogs?.length ?? 0) === 0 ? <Empty /> : (
+                      {logsLoading ? <AppSpinner text="" /> : (auditLogs?.length ?? 0) === 0 ? <Empty /> : (
                         <Timeline
                           mode="left"
                           items={auditLogs.map(log => ({

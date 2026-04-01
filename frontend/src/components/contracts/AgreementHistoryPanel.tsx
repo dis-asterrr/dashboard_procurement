@@ -1,10 +1,11 @@
 "use client";
 
-import { Form, Input, Button, Timeline, Typography, Divider, Spin, App, Card } from "antd";
+import { Form, Input, Button, Timeline, Typography, Divider, App, Card } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { useInvalidate } from "@refinedev/core";
 import { apiClient } from "@/lib/api-client";
+import AppSpinner from "@/components/common/app-spinner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
@@ -111,7 +112,7 @@ export default function AgreementHistoryPanel({ contractId, resourceSuffix, enti
 
       <Title level={5}>Timeline</Title>
       {historyLoading ? (
-        <div style={{ textAlign: "center", padding: 20 }}><Spin /></div>
+        <div style={{ textAlign: "center", padding: 20 }}><AppSpinner text="" /></div>
       ) : logs.length === 0 ? (
         <Text type="secondary">No history found for this contract.</Text>
       ) : (

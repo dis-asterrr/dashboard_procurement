@@ -59,7 +59,7 @@ export default function VendorList() {
             <Form.Item name="q" style={{ margin: 0 }}>
               <Input
                 prefix={<SearchOutlined style={{ color: "var(--ant-color-text-secondary)", marginRight: 8 }} />}
-                placeholder="Search contracts, vendors, or mills..."
+                placeholder="Search all data..."
                 allowClear
                 style={{ width: 360, borderRadius: "8px" }}
                 onPressEnter={() => searchFormProps.form?.submit()}

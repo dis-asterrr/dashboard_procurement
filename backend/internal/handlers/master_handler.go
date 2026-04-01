@@ -199,7 +199,8 @@ func (h *MasterHandler) DeleteVendor(c *gin.Context) {
 // --- Product ---
 
 func (h *MasterHandler) GetAllProducts(c *gin.Context) {
-	products, err := h.service.GetAllProducts()
+	search := c.Query("q")
+	products, err := h.service.GetAllProducts(search)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -269,7 +270,8 @@ func (h *MasterHandler) DeleteProduct(c *gin.Context) {
 // --- Zone ---
 
 func (h *MasterHandler) GetAllZones(c *gin.Context) {
-	zones, err := h.service.GetAllZones()
+	search := c.Query("q")
+	zones, err := h.service.GetAllZones(search)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

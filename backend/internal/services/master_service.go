@@ -61,8 +61,8 @@ func (s *MasterService) DeleteVendor(id uint) error {
 
 // --- Product ---
 
-func (s *MasterService) GetAllProducts() ([]models.Product, error) {
-	return s.repo.GetAllProducts()
+func (s *MasterService) GetAllProducts(search string) ([]models.Product, error) {
+	return s.repo.GetAllProducts(search)
 }
 
 func (s *MasterService) GetProductByID(id uint) (*models.Product, error) {
@@ -83,8 +83,8 @@ func (s *MasterService) DeleteProduct(id uint) error {
 
 // --- Zone ---
 
-func (s *MasterService) GetAllZones() ([]models.Zone, error) {
-	return s.repo.GetAllZones()
+func (s *MasterService) GetAllZones(search string) ([]models.Zone, error) {
+	return s.repo.GetAllZones(search)
 }
 
 func (s *MasterService) GetZoneByID(id uint) (*models.Zone, error) {

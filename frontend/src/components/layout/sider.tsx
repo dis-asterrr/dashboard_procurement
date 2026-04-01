@@ -8,10 +8,12 @@ import {
   CloudUploadOutlined,
   ShopOutlined,
   EnvironmentOutlined,
+  AimOutlined,
   FileDoneOutlined,
   CarOutlined,
   LogoutOutlined,
   NodeIndexOutlined,
+  TableOutlined,
 } from "@ant-design/icons";
 import { clearAuth, getAuthUser } from "@/lib/auth";
 
@@ -30,23 +32,39 @@ export const CustomSider = ({ collapsed, onCollapse }: { collapsed: boolean, onC
       label: "Overview",
     },
     {
-      key: "master",
-      label: "Master Data",
-      type: "group" as const,
-      children: [
-        { key: "/vendors", icon: <ShopOutlined style={{ fontSize: '18px' }} />, label: "Vendors" },
-        { key: "/mills", icon: <EnvironmentOutlined style={{ fontSize: '18px' }} />, label: "Mills" },
-      ]
+      key: "/vendors",
+      icon: <ShopOutlined style={{ fontSize: '18px' }} />,
+      label: "Vendors",
     },
     {
-      key: "contracts",
-      label: "Contracts",
-      type: "group" as const,
-      children: [
-        { key: "/contracts/dedicated-fix", icon: <FileDoneOutlined style={{ fontSize: '18px' }} />, label: "Dedicated Fix" },
-        { key: "/contracts/dedicated-var", icon: <NodeIndexOutlined style={{ fontSize: '18px' }} />, label: "Dedicated Var" },
-        { key: "/contracts/oncall", icon: <CarOutlined style={{ fontSize: '18px' }} />, label: "Oncall Routing" },
-      ]
+      key: "/mills",
+      icon: <EnvironmentOutlined style={{ fontSize: '18px' }} />,
+      label: "Mills",
+    },
+    {
+      key: "/zones",
+      icon: <AimOutlined style={{ fontSize: '18px' }} />,
+      label: "Zones",
+    },
+    {
+      key: "/contracts/dedicated-fix",
+      icon: <FileDoneOutlined style={{ fontSize: '18px' }} />,
+      label: "Dedicated Fix",
+    },
+    {
+      key: "/contracts/dedicated-var",
+      icon: <NodeIndexOutlined style={{ fontSize: '18px' }} />,
+      label: "Dedicated Var",
+    },
+    {
+      key: "/contracts/oncall",
+      icon: <CarOutlined style={{ fontSize: '18px' }} />,
+      label: "Oncall Routing",
+    },
+    {
+      key: "/explorer",
+      icon: <TableOutlined style={{ fontSize: '18px' }} />,
+      label: "Data Explorer",
     },
     {
       key: "/import",
@@ -121,35 +139,16 @@ export const CustomSider = ({ collapsed, onCollapse }: { collapsed: boolean, onC
           selectedKeys={[pathname]}
           onClick={({ key }) => router.push(key)}
           style={{ borderRight: "none", fontSize: "14px", fontWeight: 500 }}
-          items={menuItems.map(item => {
-            if (item.type === "group" && item.children) {
-              return {
-                ...item,
-                label: collapsed ? null : item.label,
-                style: { marginTop: collapsed ? 0 : '16px', color: 'var(--ant-color-text-secondary)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' },
-                children: item.children.map(child => ({
-                  ...child,
-                  style: {
-                    borderRadius: "8px",
-                    marginBottom: "4px",
-                    fontWeight: pathname === child.key ? 600 : 500,
-                    backgroundColor: pathname === child.key ? "rgba(255,255,255,0.08)" : "transparent",
-                    color: pathname === child.key ? "var(--ant-color-text)" : "var(--ant-color-text-secondary)",
-                  }
-                }))
-              }
-            }
-            return {
-              ...item,
-              style: {
-                borderRadius: "8px",
-                marginBottom: "4px",
-                fontWeight: pathname === item.key ? 600 : 500,
-                backgroundColor: pathname === item.key ? "rgba(255,255,255,0.08)" : "transparent",
-                color: pathname === item.key ? "var(--ant-color-text)" : "var(--ant-color-text-secondary)",
-              }
-            }
-          })}
+          items={menuItems.map(item => ({
+            ...item,
+            style: {
+              borderRadius: "8px",
+              marginBottom: "4px",
+              fontWeight: pathname === item.key ? 600 : 500,
+              backgroundColor: pathname === item.key ? "rgba(255,255,255,0.08)" : "transparent",
+              color: pathname === item.key ? "var(--ant-color-text)" : "var(--ant-color-text-secondary)",
+            },
+          }))}
         />
       </div>
 

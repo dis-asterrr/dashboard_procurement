@@ -38,6 +38,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	// Handlers
 	masterHandler := handlers.NewMasterHandler(masterService)
 	contractHandler := handlers.NewContractHandler(contractService)
+	searchHandler := handlers.NewSearchHandler(masterService, contractService)
 	importHandler := handlers.NewImportHandler(parserService, importService, cfg)
 	exportHandler := handlers.NewExportHandler(exportService)
 	authHandler := handlers.NewAuthHandler(userService)
@@ -54,6 +55,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	protected.GET("/auth/me", authHandler.Me)
+	protected.GET("/search", searchHandler.Search)
 
 	// Master Data
 	mills := protected.Group("/mills")

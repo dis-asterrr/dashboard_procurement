@@ -54,7 +54,7 @@ func (r *MasterRepository) GetAllVendors(search string) ([]models.Vendor, error)
 	query := r.db
 	if search != "" {
 		like := "%" + search + "%"
-		query = query.Where("name ILIKE ? OR code ILIKE ? OR email ILIKE ? OR contact_person ILIKE ?", like, like, like, like)
+		query = query.Where("name ILIKE ? OR code ILIKE ? OR email ILIKE ? OR contact_person ILIKE ? OR phone ILIKE ? OR address ILIKE ?", like, like, like, like, like, like)
 	}
 	err := query.Order("id ASC").Find(&vendors).Error
 	return vendors, err
@@ -80,9 +80,14 @@ func (r *MasterRepository) DeleteVendor(id uint) error {
 
 // --- Product ---
 
-func (r *MasterRepository) GetAllProducts() ([]models.Product, error) {
+func (r *MasterRepository) GetAllProducts(search string) ([]models.Product, error) {
 	var products []models.Product
-	err := r.db.Find(&products).Error
+	query := r.db
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ?", like)
+	}
+	err := query.Order("id ASC").Find(&products).Error
 	return products, err
 }
 
@@ -106,9 +111,14 @@ func (r *MasterRepository) DeleteProduct(id uint) error {
 
 // --- Zone ---
 
-func (r *MasterRepository) GetAllZones() ([]models.Zone, error) {
+func (r *MasterRepository) GetAllZones(search string) ([]models.Zone, error) {
 	var zones []models.Zone
-	err := r.db.Find(&zones).Error
+	query := r.db
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ? OR type ILIKE ?", like, like)
+	}
+	err := query.Order("id ASC").Find(&zones).Error
 	return zones, err
 }
 

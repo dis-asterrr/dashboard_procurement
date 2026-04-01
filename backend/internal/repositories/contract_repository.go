@@ -32,9 +32,36 @@ func (r *ContractRepository) GetAllDedicatedFix(filters map[string]interface{}, 
 		like := "%" + search + "%"
 		query = query.Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_fixes.vendor_id").
 			Joins("LEFT JOIN mills ON mills.id = contract_dedicated_fixes.mill_id").
-			Where("contract_dedicated_fixes.spk_number ILIKE ? OR vendors.name ILIKE ? OR vendors.code ILIKE ? OR mills.name ILIKE ? OR mills.code ILIKE ?", like, like, like, like, like)
+			Joins("LEFT JOIN products ON products.id = contract_dedicated_fixes.product_id").
+			Joins("LEFT JOIN mots ON mots.id = contract_dedicated_fixes.mot_id").
+			Joins("LEFT JOIN uoms ON uoms.id = contract_dedicated_fixes.uom_id").
+			Where(`
+				contract_dedicated_fixes.spk_number ILIKE ? OR
+				contract_dedicated_fixes.fa_number ILIKE ? OR
+				contract_dedicated_fixes.area_category ILIKE ? OR
+				contract_dedicated_fixes.proposal_cfas ILIKE ? OR
+				contract_dedicated_fixes.license_plate ILIKE ? OR
+				contract_dedicated_fixes.notes ILIKE ? OR
+				vendors.name ILIKE ? OR
+				vendors.code ILIKE ? OR
+				mills.name ILIKE ? OR
+				mills.code ILIKE ? OR
+				products.name ILIKE ? OR
+				mots.name ILIKE ? OR
+				uoms.name ILIKE ? OR
+				CAST(contract_dedicated_fixes.fix_cost AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_fixes.distributed_cost AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_fixes.unit_cost AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_fixes.cost_per_kg AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_fixes.cost_per_kgkm AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_fixes.cargo_carried AS TEXT) ILIKE ?
+			`,
+				like, like, like, like, like, like,
+				like, like, like, like, like, like, like,
+				like, like, like, like, like, like,
+			)
 	}
-	err := query.Order("id ASC").Find(&contracts).Error
+	err := query.Order("contract_dedicated_fixes.id ASC").Find(&contracts).Error
 	return contracts, err
 }
 
@@ -82,9 +109,38 @@ func (r *ContractRepository) GetAllDedicatedVar(filters map[string]interface{}, 
 		like := "%" + search + "%"
 		query = query.Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_vars.vendor_id").
 			Joins("LEFT JOIN mills ON mills.id = contract_dedicated_vars.mill_id").
-			Where("contract_dedicated_vars.spk_number ILIKE ? OR vendors.name ILIKE ? OR vendors.code ILIKE ? OR mills.name ILIKE ? OR mills.code ILIKE ?", like, like, like, like, like)
+			Joins("LEFT JOIN products ON products.id = contract_dedicated_vars.product_id").
+			Joins("LEFT JOIN zones AS origin_zones ON origin_zones.id = contract_dedicated_vars.origin_zone_id").
+			Joins("LEFT JOIN zones AS dest_zones ON dest_zones.id = contract_dedicated_vars.dest_zone_id").
+			Joins("LEFT JOIN mots ON mots.id = contract_dedicated_vars.mot_id").
+			Joins("LEFT JOIN uoms ON uoms.id = contract_dedicated_vars.uom_id").
+			Where(`
+				contract_dedicated_vars.spk_number ILIKE ? OR
+				contract_dedicated_vars.fa_number ILIKE ? OR
+				contract_dedicated_vars.area_category ILIKE ? OR
+				contract_dedicated_vars.proposal_cfas ILIKE ? OR
+				contract_dedicated_vars.notes ILIKE ? OR
+				vendors.name ILIKE ? OR
+				vendors.code ILIKE ? OR
+				mills.name ILIKE ? OR
+				mills.code ILIKE ? OR
+				products.name ILIKE ? OR
+				origin_zones.name ILIKE ? OR
+				dest_zones.name ILIKE ? OR
+				mots.name ILIKE ? OR
+				uoms.name ILIKE ? OR
+				CAST(contract_dedicated_vars.distance AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.payload AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.cost_idr AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.cost_per_kg AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.cost_per_kgkm AS TEXT) ILIKE ?
+			`,
+				like, like, like, like, like,
+				like, like, like, like, like, like, like, like, like,
+				like, like, like, like, like,
+			)
 	}
-	err := query.Order("id ASC").Find(&contracts).Error
+	err := query.Order("contract_dedicated_vars.id ASC").Find(&contracts).Error
 	return contracts, err
 }
 
@@ -134,9 +190,42 @@ func (r *ContractRepository) GetAllOncall(filters map[string]interface{}, search
 		like := "%" + search + "%"
 		query = query.Joins("LEFT JOIN vendors ON vendors.id = contract_oncalls.vendor_id").
 			Joins("LEFT JOIN mills ON mills.id = contract_oncalls.mill_id").
-			Where("contract_oncalls.spk_number ILIKE ? OR vendors.name ILIKE ? OR vendors.code ILIKE ? OR mills.name ILIKE ? OR mills.code ILIKE ?", like, like, like, like, like)
+			Joins("LEFT JOIN products ON products.id = contract_oncalls.product_id").
+			Joins("LEFT JOIN zones AS origin_zones ON origin_zones.id = contract_oncalls.origin_zone_id").
+			Joins("LEFT JOIN zones AS dest_zones ON dest_zones.id = contract_oncalls.dest_zone_id").
+			Joins("LEFT JOIN mots ON mots.id = contract_oncalls.mot_id").
+			Joins("LEFT JOIN uoms ON uoms.id = contract_oncalls.uom_id").
+			Where(`
+				contract_oncalls.spk_number ILIKE ? OR
+				contract_oncalls.fa_number ILIKE ? OR
+				contract_oncalls.area_category ILIKE ? OR
+				contract_oncalls.proposal_cfas ILIKE ? OR
+				contract_oncalls.notes ILIKE ? OR
+				vendors.name ILIKE ? OR
+				vendors.code ILIKE ? OR
+				mills.name ILIKE ? OR
+				mills.code ILIKE ? OR
+				products.name ILIKE ? OR
+				origin_zones.name ILIKE ? OR
+				dest_zones.name ILIKE ? OR
+				mots.name ILIKE ? OR
+				uoms.name ILIKE ? OR
+				CAST(contract_oncalls.distance AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.payload AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.loading_cost AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.unloading_cost AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.cost_idr AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.cost_per_kg AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.cost_per_ton AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.running_cost_idr AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.running_cost_usd AS TEXT) ILIKE ?
+			`,
+				like, like, like, like, like,
+				like, like, like, like, like, like, like, like, like,
+				like, like, like, like, like, like, like, like, like,
+			)
 	}
-	err := query.Order("id ASC").Find(&contracts).Error
+	err := query.Order("contract_oncalls.id ASC").Find(&contracts).Error
 	return contracts, err
 }
 

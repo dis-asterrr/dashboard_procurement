@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigation } from "@refinedev/core";
-import { Card, Typography, Row, Col, Button, Spin, Tag, Flex, Progress, List, Space, Segmented, theme } from "antd";
+import { Card, Typography, Row, Col, Button, Tag, Flex, Progress, List, Space, Segmented, theme } from "antd";
 import {
   DownloadOutlined,
   DollarOutlined,
@@ -21,6 +21,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
 import { getToken } from "@/lib/auth";
+import AppSpinner from "@/components/common/app-spinner";
 
 const { Title, Text } = Typography;
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
@@ -293,8 +294,8 @@ export default function DashboardOverview() {
 
   if (loading) {
     return (
-      <Flex justify="center" align="center" style={{ height: 'calc(100vh - 64px)' }}>
-        <Spin size="large"><div style={{ marginTop: 16, color: token.colorTextSecondary }}>Aggregating metrics...</div></Spin>
+      <Flex justify="center" align="center" style={{ height: "calc(100vh - 64px)" }}>
+        <AppSpinner card text="Aggregating metrics..." size={32} />
       </Flex>
     );
   }
