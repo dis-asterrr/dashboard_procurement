@@ -70,13 +70,6 @@ export default function VendorList() {
         <Table
           {...(tableProps as any)}
           rowKey="id"
-          pagination={{
-            ...(tableProps.pagination || {}),
-            position: ["bottomRight"],
-            style: { padding: '16px' },
-            showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50", "100"]
-          } as any}
           scroll={{ x: 'max-content' }}
         >
           <Table.Column dataIndex="id" title="ID" width={80} />
