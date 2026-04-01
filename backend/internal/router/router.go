@@ -16,7 +16,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
 
 	// Middleware
-	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.CORSMiddleware(cfg))
 
 	// --- Initialize layers ---
 
