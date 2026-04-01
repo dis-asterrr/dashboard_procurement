@@ -89,7 +89,7 @@ export default function OncallList() {
           rowKey="id"
           pagination={{
             ...(tableProps.pagination || {}),
-            position: undefined,
+            position: ["bottomRight"],
             style: { padding: '16px' },
             showSizeChanger: true,
             pageSizeOptions: ["10", "20", "50", "100"]
