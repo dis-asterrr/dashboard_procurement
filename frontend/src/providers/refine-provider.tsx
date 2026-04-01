@@ -3,7 +3,7 @@
 import { Refine } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import "@refinedev/antd/dist/reset.css";
-import { App as AntdApp } from "antd";
+import { App as AntdApp, theme } from "antd";
 import { ColorModeContextProvider } from "@/contexts/color-mode";
 import routerProvider from "@refinedev/nextjs-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -56,22 +56,36 @@ export default function RefineProvider({ children }: { children: React.ReactNode
     }),
     [],
   );
-  if (checkingAuth) {
-    return (
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        <AppSpinner text="Checking session..." />
-      </div>
-    );
-  }
 
   return (
     <ColorModeContextProvider>
       <AntdApp>
-        <RefineAppShell authProvider={authProvider} isLoginPage={isLoginPage}>
-          {children}
-        </RefineAppShell>
+        {checkingAuth ? (
+          <SessionCheckingState />
+        ) : (
+          <RefineAppShell authProvider={authProvider} isLoginPage={isLoginPage}>
+            {children}
+          </RefineAppShell>
+        )}
       </AntdApp>
     </ColorModeContextProvider>
+  );
+}
+
+function SessionCheckingState() {
+  const { token } = theme.useToken();
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        backgroundColor: token.colorBgLayout,
+      }}
+    >
+      <AppSpinner text="Checking session..." />
+    </div>
   );
 }
 
