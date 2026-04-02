@@ -185,8 +185,16 @@ export default function MillShow() {
 
             <Divider style={{ borderColor: token.colorSplit }} />
             <Title level={5}>Active Route Distribution</Title>
-            <Flex vertical gap={12}>
-              {oncallContracts.slice(0, 3).map((r: any) => (
+            <Flex
+              vertical
+              gap={12}
+              style={{
+                maxHeight: oncallContracts.length > 5 ? 220 : "none",
+                overflowY: oncallContracts.length > 5 ? "auto" : "visible",
+                paddingRight: oncallContracts.length > 5 ? 4 : 0,
+              }}
+            >
+              {oncallContracts.slice(0, 5).map((r: any) => (
                 <div key={r.id} style={{ padding: '8px 12px', backgroundColor: token.colorFillAlter, borderRadius: 8 }}>
                   <Text style={{ fontSize: 12 }}>{r.origin_zone?.name} <ArrowRightOutlined style={{ fontSize: 10, color: token.colorTextSecondary }} /> {r.dest_zone?.name}</Text>
                 </div>
