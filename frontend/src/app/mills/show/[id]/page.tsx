@@ -107,7 +107,7 @@ export default function MillShow() {
   const commonColumns = [
     { title: "SPK", dataIndex: "spk_number", key: "spk", render: (v: any) => <Text strong>{v || "-"}</Text> },
     { title: "Transporter", dataIndex: ["vendor", "name"], key: "vendor" },
-    { title: "MOT", dataIndex: ["mot", "name"], key: "mot", render: (v: any) => <Tag color="blue" variant="filled" icon={<CarOutlined />}>{v}</Tag> },
+    { title: "MOT", dataIndex: ["mot", "name"], key: "mot" },
     { title: "Validity", key: "validity", render: (_: any, r: any) => <Text type="secondary" style={{ fontSize: 13 }}>{formatDate(r.validity_start)} to {formatDate(r.validity_end)}</Text> },
     { title: "Status", dataIndex: "status", key: "status", render: (s: any) => <Tag color={s === 'active' ? 'blue' : 'default'} variant="filled">{s?.toUpperCase()}</Tag> }
   ];
