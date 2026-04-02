@@ -129,3 +129,24 @@ func (s *UserService) DeleteUser(id uint) error {
 	}
 	return s.repo.DeleteByID(id)
 }
+
+func (s *UserService) UpdateUserPassword(id uint, newPassword string) error {
+	if len(newPassword) < 6 {
+		return errors.New("password must be at least 6 characters")
+	}
+
+	_, err := s.repo.FindByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user not found")
+		}
+		return err
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.UpdatePasswordHash(id, string(hash))
+}

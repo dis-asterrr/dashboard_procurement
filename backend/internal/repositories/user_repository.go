@@ -45,7 +45,7 @@ func (r *UserRepository) Count() (int64, error) {
 
 func (r *UserRepository) FindAll() ([]models.User, error) {
 	var users []models.User
-	if err := r.db.Order("created_at desc").Find(&users).Error; err != nil {
+	if err := r.db.Order("id asc").Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil
@@ -53,4 +53,8 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 
 func (r *UserRepository) DeleteByID(id uint) error {
 	return r.db.Delete(&models.User{}, id).Error
+}
+
+func (r *UserRepository) UpdatePasswordHash(id uint, passwordHash string) error {
+	return r.db.Model(&models.User{}).Where("id = ?", id).Update("password_hash", passwordHash).Error
 }

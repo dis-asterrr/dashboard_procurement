@@ -25,6 +25,8 @@ export const CustomSider = ({ collapsed, onCollapse }: { collapsed: boolean, onC
   const pathname = usePathname();
   const router = useRouter();
   const authUser = getAuthUser();
+  const profileName = authUser?.name || authUser?.username || "User";
+  const profileRole = authUser?.username === "admin" ? "Admin" : "Staff";
 
   const menuItems = [
     {
@@ -171,8 +173,8 @@ export const CustomSider = ({ collapsed, onCollapse }: { collapsed: boolean, onC
               transition: "all 0.2s",
               whiteSpace: "nowrap"
             }}>
-              <Text style={{ display: "block", fontWeight: 600 }}>Administrator</Text>
-              <Text type="secondary" style={{ fontSize: "13px" }}>{authUser?.username || "admin"}</Text>
+              <Text style={{ display: "block", fontWeight: 600 }}>{profileName}</Text>
+              <Text type="secondary" style={{ fontSize: "13px" }}>{profileRole}</Text>
             </div>
             
             <Button 

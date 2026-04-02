@@ -18,6 +18,10 @@ type CreateUserInput struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
+type UpdateUserPasswordInput struct {
+	Password string `json:"password" binding:"required,min=6"`
+}
+
 type LoginInput struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`

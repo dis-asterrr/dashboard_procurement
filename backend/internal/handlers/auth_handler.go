@@ -159,3 +159,37 @@ func (h *AuthHandler) DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "user deleted"})
 }
+
+func (h *AuthHandler) UpdateUserPassword(c *gin.Context) {
+	usernameAny, ok := c.Get("username")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	username, ok := usernameAny.(string)
+	if !ok || username != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: admin only"})
+		return
+	}
+
+	idParam := c.Param("id")
+	userID64, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	var input models.UpdateUserPasswordInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.userService.UpdateUserPassword(uint(userID64), input.Password); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password updated"})
+}

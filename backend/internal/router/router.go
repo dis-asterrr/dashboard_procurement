@@ -58,6 +58,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	protected.GET("/auth/users", authHandler.ListUsers)
 	protected.POST("/auth/users", authHandler.CreateUser)
 	protected.DELETE("/auth/users/:id", authHandler.DeleteUser)
+	protected.PATCH("/auth/users/:id/password", authHandler.UpdateUserPassword)
 	protected.GET("/search", searchHandler.Search)
 
 	// Master Data

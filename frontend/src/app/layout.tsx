@@ -12,6 +12,12 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Integrated Procurement Dashboard",
   description: "Integrated Procurement & Logistics Dashboard",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export const dynamic = "force-dynamic";

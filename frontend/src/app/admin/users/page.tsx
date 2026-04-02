@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { App, Button, Card, Form, Input, Popconfirm, Space, Table, Typography } from "antd";
+import { App, Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Typography } from "antd";
 import { Breadcrumb } from "@refinedev/antd";
-import { DeleteOutlined, UserAddOutlined } from "@ant-design/icons";
+import { DeleteOutlined, LockOutlined, UserAddOutlined } from "@ant-design/icons";
 import { apiClient } from "@/lib/api-client";
 import { getAuthUser } from "@/lib/auth";
 
@@ -32,6 +32,10 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [fetchingUsers, setFetchingUsers] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [passwordTargetUser, setPasswordTargetUser] = useState<UserRow | null>(null);
+  const [passwordForm] = Form.useForm();
 
   useEffect(() => {
     const authUser = getAuthUser();
@@ -93,8 +97,34 @@ export default function AdminUsersPage() {
     }
   };
 
+  const openPasswordModal = (user: UserRow) => {
+    setPasswordTargetUser(user);
+    passwordForm.resetFields();
+    setPasswordModalOpen(true);
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!passwordTargetUser) return;
+    try {
+      const values = await passwordForm.validateFields();
+      setUpdatingPassword(true);
+      await apiClient.patch(`${API_URL}/auth/users/${passwordTargetUser.id}/password`, {
+        password: values.password,
+      });
+      message.success(`Password updated for ${passwordTargetUser.username}`);
+      setPasswordModalOpen(false);
+      passwordForm.resetFields();
+    } catch (error: any) {
+      if (error?.errorFields) return;
+      const err = error?.response?.data?.error || "Failed to update password";
+      message.error(err);
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   return (
-    <div style={{ padding: "32px 40px", maxWidth: 900, margin: "0 auto", minHeight: "calc(100vh - 64px)" }}>
+    <div style={{ padding: "32px 40px", maxWidth: 1400, margin: "0 auto", minHeight: "calc(100vh - 64px)" }}>
       <div style={{ marginBottom: 16 }}>
         <Breadcrumb />
       </div>
@@ -104,7 +134,6 @@ export default function AdminUsersPage() {
           <Title level={2} style={{ margin: "0 0 8px 0", fontWeight: 700 }}>
             Admin - User Management
           </Title>
-          <Text type="secondary">Add a new application user account.</Text>
         </div>
 
         <Card
@@ -158,31 +187,58 @@ export default function AdminUsersPage() {
               {
                 title: "Action",
                 key: "action",
-                width: 140,
+                width: 260,
                 render: (_, record: UserRow) => (
-                  <Popconfirm
-                    title="Delete user?"
-                    description={`User "${record.username}" will be removed permanently.`}
-                    onConfirm={() => handleDeleteUser(record.id)}
-                    okText="Delete"
-                    cancelText="Cancel"
-                    disabled={record.id === currentUserId}
-                  >
-                    <Button
-                      danger
-                      type="text"
-                      icon={<DeleteOutlined />}
+                  <Space>
+                    <Button type="text" icon={<LockOutlined />} onClick={() => openPasswordModal(record)}>
+                      Edit Password
+                    </Button>
+                    <Popconfirm
+                      title="Delete user?"
+                      description={`User "${record.username}" will be removed permanently.`}
+                      onConfirm={() => handleDeleteUser(record.id)}
+                      okText="Delete"
+                      cancelText="Cancel"
                       disabled={record.id === currentUserId}
                     >
-                      Delete
-                    </Button>
-                  </Popconfirm>
+                      <Button
+                        danger
+                        type="text"
+                        icon={<DeleteOutlined />}
+                        disabled={record.id === currentUserId}
+                      >
+                        Delete
+                      </Button>
+                    </Popconfirm>
+                  </Space>
                 ),
               },
             ]}
           />
         </Card>
       </Space>
+
+      <Modal
+        title={`Edit Password - ${passwordTargetUser?.username || ""}`}
+        open={passwordModalOpen}
+        onCancel={() => setPasswordModalOpen(false)}
+        onOk={handleUpdatePassword}
+        okText="Update Password"
+        confirmLoading={updatingPassword}
+      >
+        <Form form={passwordForm} layout="vertical" requiredMark={false}>
+          <Form.Item
+            label="New Password"
+            name="password"
+            rules={[
+              { required: true, message: "Please input new password" },
+              { min: 6, message: "Password must be at least 6 characters" },
+            ]}
+          >
+            <Input.Password placeholder="Minimum 6 characters" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
