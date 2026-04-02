@@ -93,7 +93,6 @@ export default function ImportWizardPage() {
           <Title level={2} style={{ margin: "0 0 8px 0", fontWeight: 700 }}>
             Data Import Wizard
           </Title>
-          <Text type="secondary">Upload, validate, and import procurement sheets in one flow.</Text>
         </div>
       </div>
 
