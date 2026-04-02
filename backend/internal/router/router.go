@@ -55,6 +55,9 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	protected.GET("/auth/me", authHandler.Me)
+	protected.GET("/auth/users", authHandler.ListUsers)
+	protected.POST("/auth/users", authHandler.CreateUser)
+	protected.DELETE("/auth/users/:id", authHandler.DeleteUser)
 	protected.GET("/search", searchHandler.Search)
 
 	// Master Data

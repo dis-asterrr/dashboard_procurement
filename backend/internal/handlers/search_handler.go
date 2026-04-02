@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -35,100 +36,103 @@ func (h *SearchHandler) Search(c *gin.Context) {
 		return
 	}
 
-	vendors, err := h.masterService.GetAllVendors(q)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	results := make([]SearchItem, 0, 50)
+
+	// --- Master data searches (each independent, failures are logged & skipped) ---
+
+	if vendors, err := h.masterService.GetAllVendors(q); err != nil {
+		log.Printf("[SEARCH] vendors query failed for q=%q: %v", q, err)
+	} else {
+		for _, item := range vendors {
+			results = append(results, SearchItem{
+				ID:    item.ID,
+				Type:  "vendors",
+				Label: item.Name,
+			})
+		}
 	}
-	mills, err := h.masterService.GetAllMills(q)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+
+	if mills, err := h.masterService.GetAllMills(q); err != nil {
+		log.Printf("[SEARCH] mills query failed for q=%q: %v", q, err)
+	} else {
+		for _, item := range mills {
+			results = append(results, SearchItem{
+				ID:    item.ID,
+				Type:  "mills",
+				Label: item.Name,
+			})
+		}
 	}
-	zones, err := h.masterService.GetAllZones(q)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+
+	if zones, err := h.masterService.GetAllZones(q); err != nil {
+		log.Printf("[SEARCH] zones query failed for q=%q: %v", q, err)
+	} else {
+		for _, item := range zones {
+			results = append(results, SearchItem{
+				ID:    item.ID,
+				Type:  "zones",
+				Label: fmt.Sprintf("%s (%s)", item.Name, item.Type),
+			})
+		}
 	}
+
+	// --- Contract searches (each independent) ---
 
 	emptyFilters := map[string]interface{}{}
-	dedicatedFix, err := h.contractService.GetAllDedicatedFix(emptyFilters, q)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	dedicatedVar, err := h.contractService.GetAllDedicatedVar(emptyFilters, q)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	oncall, err := h.contractService.GetAllOncall(emptyFilters, q)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+
+	if dedicatedFix, err := h.contractService.GetAllDedicatedFix(emptyFilters, q); err != nil {
+		log.Printf("[SEARCH] dedicated-fix query failed for q=%q: %v", q, err)
+	} else {
+		for _, item := range dedicatedFix {
+			results = append(results, SearchItem{
+				ID:    item.ID,
+				Type:  "contracts/dedicated-fix",
+				Label: buildContractLabel(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name),
+			})
+		}
 	}
 
-	results := make([]SearchItem, 0, len(vendors)+len(mills)+len(zones)+len(dedicatedFix)+len(dedicatedVar)+len(oncall))
-
-	for _, item := range vendors {
-		results = append(results, SearchItem{
-			ID:    item.ID,
-			Type:  "vendors",
-			Label: item.Name,
-		})
-	}
-	for _, item := range mills {
-		results = append(results, SearchItem{
-			ID:    item.ID,
-			Type:  "mills",
-			Label: item.Name,
-		})
-	}
-	for _, item := range zones {
-		results = append(results, SearchItem{
-			ID:    item.ID,
-			Type:  "zones",
-			Label: fmt.Sprintf("%s (%s)", item.Name, item.Type),
-		})
-	}
-	for _, item := range dedicatedFix {
-		results = append(results, SearchItem{
-			ID:    item.ID,
-			Type:  "contracts/dedicated-fix",
-			Label: buildContractLabel(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name),
-		})
-	}
-	for _, item := range dedicatedVar {
-		originName := ""
-		destName := ""
-		if item.OriginZone != nil {
-			originName = item.OriginZone.Name
+	if dedicatedVar, err := h.contractService.GetAllDedicatedVar(emptyFilters, q); err != nil {
+		log.Printf("[SEARCH] dedicated-var query failed for q=%q: %v", q, err)
+	} else {
+		for _, item := range dedicatedVar {
+			originName := ""
+			destName := ""
+			if item.OriginZone != nil {
+				originName = item.OriginZone.Name
+			}
+			if item.DestZone != nil {
+				destName = item.DestZone.Name
+			}
+			results = append(results, SearchItem{
+				ID:    item.ID,
+				Type:  "contracts/dedicated-var",
+				Label: buildContractLabelWithRoute(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name, originName, destName),
+			})
 		}
-		if item.DestZone != nil {
-			destName = item.DestZone.Name
-		}
-		results = append(results, SearchItem{
-			ID:    item.ID,
-			Type:  "contracts/dedicated-var",
-			Label: buildContractLabelWithRoute(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name, originName, destName),
-		})
-	}
-	for _, item := range oncall {
-		originName := ""
-		destName := ""
-		if item.OriginZone != nil {
-			originName = item.OriginZone.Name
-		}
-		if item.DestZone != nil {
-			destName = item.DestZone.Name
-		}
-		results = append(results, SearchItem{
-			ID:    item.ID,
-			Type:  "contracts/oncall",
-			Label: buildContractLabelWithRoute(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name, originName, destName),
-		})
 	}
 
+	if oncall, err := h.contractService.GetAllOncall(emptyFilters, q); err != nil {
+		log.Printf("[SEARCH] oncall query failed for q=%q: %v", q, err)
+	} else {
+		for _, item := range oncall {
+			originName := ""
+			destName := ""
+			if item.OriginZone != nil {
+				originName = item.OriginZone.Name
+			}
+			if item.DestZone != nil {
+				destName = item.DestZone.Name
+			}
+			results = append(results, SearchItem{
+				ID:    item.ID,
+				Type:  "contracts/oncall",
+				Label: buildContractLabelWithRoute(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name, originName, destName),
+			})
+		}
+	}
+
+	log.Printf("[SEARCH] q=%q => %d results", q, len(results))
 	c.JSON(http.StatusOK, results)
 }
 

@@ -139,6 +139,13 @@ function RefineAppShell({
             },
           },
           {
+            name: "admin/users",
+            list: "/admin/users",
+            meta: {
+              label: "Admin Users",
+            },
+          },
+          {
             name: "vendors",
             list: "/vendors",
             create: "/vendors/create",

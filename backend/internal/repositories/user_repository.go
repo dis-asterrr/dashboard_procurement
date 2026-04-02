@@ -42,3 +42,15 @@ func (r *UserRepository) Count() (int64, error) {
 	}
 	return total, nil
 }
+
+func (r *UserRepository) FindAll() ([]models.User, error) {
+	var users []models.User
+	if err := r.db.Order("created_at desc").Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (r *UserRepository) DeleteByID(id uint) error {
+	return r.db.Delete(&models.User{}, id).Error
+}

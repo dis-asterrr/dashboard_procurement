@@ -114,3 +114,18 @@ func (s *UserService) ParseToken(rawToken string) (jwt.MapClaims, error) {
 	}
 	return claims, nil
 }
+
+func (s *UserService) ListUsers() ([]models.User, error) {
+	return s.repo.FindAll()
+}
+
+func (s *UserService) DeleteUser(id uint) error {
+	_, err := s.repo.FindByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user not found")
+		}
+		return err
+	}
+	return s.repo.DeleteByID(id)
+}

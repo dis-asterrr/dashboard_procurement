@@ -211,6 +211,12 @@ export function GlobalSearchBar() {
     } catch (error: any) {
       if (
         error?.name !== "CanceledError" &&
+        error?.code !== "ERR_CANCELED"
+      ) {
+        console.error("[GlobalSearch] Search failed:", error?.response?.status, error?.response?.data || error?.message);
+      }
+      if (
+        error?.name !== "CanceledError" &&
         error?.code !== "ERR_CANCELED" &&
         mountedRef.current &&
         activeRequestIdRef.current === requestId

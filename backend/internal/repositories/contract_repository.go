@@ -30,7 +30,8 @@ func (r *ContractRepository) GetAllDedicatedFix(filters map[string]interface{}, 
 	}
 	if search != "" {
 		like := "%" + search + "%"
-		query = query.Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_fixes.vendor_id").
+		query = query.Select("DISTINCT contract_dedicated_fixes.*").
+			Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_fixes.vendor_id").
 			Joins("LEFT JOIN mills ON mills.id = contract_dedicated_fixes.mill_id").
 			Joins("LEFT JOIN products ON products.id = contract_dedicated_fixes.product_id").
 			Joins("LEFT JOIN mots ON mots.id = contract_dedicated_fixes.mot_id").
@@ -107,7 +108,8 @@ func (r *ContractRepository) GetAllDedicatedVar(filters map[string]interface{}, 
 	}
 	if search != "" {
 		like := "%" + search + "%"
-		query = query.Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_vars.vendor_id").
+		query = query.Select("DISTINCT contract_dedicated_vars.*").
+			Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_vars.vendor_id").
 			Joins("LEFT JOIN mills ON mills.id = contract_dedicated_vars.mill_id").
 			Joins("LEFT JOIN products ON products.id = contract_dedicated_vars.product_id").
 			Joins("LEFT JOIN zones AS origin_zones ON origin_zones.id = contract_dedicated_vars.origin_zone_id").
@@ -188,7 +190,8 @@ func (r *ContractRepository) GetAllOncall(filters map[string]interface{}, search
 	}
 	if search != "" {
 		like := "%" + search + "%"
-		query = query.Joins("LEFT JOIN vendors ON vendors.id = contract_oncalls.vendor_id").
+		query = query.Select("DISTINCT contract_oncalls.*").
+			Joins("LEFT JOIN vendors ON vendors.id = contract_oncalls.vendor_id").
 			Joins("LEFT JOIN mills ON mills.id = contract_oncalls.mill_id").
 			Joins("LEFT JOIN products ON products.id = contract_oncalls.product_id").
 			Joins("LEFT JOIN zones AS origin_zones ON origin_zones.id = contract_oncalls.origin_zone_id").

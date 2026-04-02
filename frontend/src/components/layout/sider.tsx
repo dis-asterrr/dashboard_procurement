@@ -14,6 +14,7 @@ import {
   LogoutOutlined,
   NodeIndexOutlined,
   TableOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 import { clearAuth, getAuthUser } from "@/lib/auth";
 
@@ -71,6 +72,15 @@ export const CustomSider = ({ collapsed, onCollapse }: { collapsed: boolean, onC
       icon: <CloudUploadOutlined style={{ fontSize: '18px' }} />,
       label: "Import Wizard",
     },
+    ...(authUser?.username === "admin"
+      ? [
+          {
+            key: "/admin/users",
+            icon: <UserAddOutlined style={{ fontSize: "18px" }} />,
+            label: "Admin Users",
+          },
+        ]
+      : []),
   ];
 
   return (
