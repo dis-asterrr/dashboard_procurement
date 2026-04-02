@@ -86,6 +86,11 @@ export default function DedicatedFixList() {
         </div>
         <Table
           {...tableProps}
+          pagination={{
+            ...tableProps.pagination as any,
+            position: undefined,
+            placement: "bottomRight",
+          } as any}
           rowKey="id"
           scroll={{ x: 'max-content' }}
         >

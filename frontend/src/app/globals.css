@@ -33,3 +33,31 @@ body {
 *::-webkit-scrollbar {
   display: none !important; /* Chrome, Safari, and Opera */
 }
+
+/* Global Search Popup – slim compact cards */
+.global-search-popup .ant-select-item {
+  padding: 4px 12px !important;
+  min-height: 28px !important;
+  line-height: 1.3 !important;
+  border-radius: 6px !important;
+  margin: 1px 4px !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.global-search-popup .ant-select-item-group {
+  padding: 6px 12px 2px !important;
+  min-height: auto !important;
+}
+
+.global-search-popup .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.06)) !important;
+}
+
+.global-search-popup .rc-virtual-list-holder {
+  max-height: 360px !important;
+}
+
+.global-search-popup .ant-select-item-empty {
+  padding: 4px 12px !important;
+  min-height: auto !important;
+}

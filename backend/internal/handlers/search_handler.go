@@ -99,17 +99,33 @@ func (h *SearchHandler) Search(c *gin.Context) {
 		})
 	}
 	for _, item := range dedicatedVar {
+		originName := ""
+		destName := ""
+		if item.OriginZone != nil {
+			originName = item.OriginZone.Name
+		}
+		if item.DestZone != nil {
+			destName = item.DestZone.Name
+		}
 		results = append(results, SearchItem{
 			ID:    item.ID,
 			Type:  "contracts/dedicated-var",
-			Label: buildContractLabel(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name),
+			Label: buildContractLabelWithRoute(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name, originName, destName),
 		})
 	}
 	for _, item := range oncall {
+		originName := ""
+		destName := ""
+		if item.OriginZone != nil {
+			originName = item.OriginZone.Name
+		}
+		if item.DestZone != nil {
+			destName = item.DestZone.Name
+		}
 		results = append(results, SearchItem{
 			ID:    item.ID,
 			Type:  "contracts/oncall",
-			Label: buildContractLabel(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name),
+			Label: buildContractLabelWithRoute(item.ID, item.SPKNumber, item.Vendor.Name, item.Mill.Name, originName, destName),
 		})
 	}
 
@@ -134,4 +150,21 @@ func buildContractLabel(id uint, spkNumber string, vendorName string, millName s
 	}
 
 	return fmt.Sprintf("%s - %s", base, strings.Join(detailParts, " -> "))
+}
+
+func buildContractLabelWithRoute(id uint, spkNumber string, vendorName string, millName string, originZone string, destZone string) string {
+	label := buildContractLabel(id, spkNumber, vendorName, millName)
+
+	origin := strings.TrimSpace(originZone)
+	dest := strings.TrimSpace(destZone)
+
+	if origin != "" && dest != "" {
+		label += fmt.Sprintf(" [%s → %s]", origin, dest)
+	} else if origin != "" {
+		label += fmt.Sprintf(" [%s]", origin)
+	} else if dest != "" {
+		label += fmt.Sprintf(" [→ %s]", dest)
+	}
+
+	return label
 }

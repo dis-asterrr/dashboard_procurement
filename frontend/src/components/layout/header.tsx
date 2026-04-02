@@ -34,6 +34,7 @@ export const Header = ({
         alignItems: "center",
         padding: "0 24px",
         height: "64px",
+        lineHeight: "64px",
         position: "sticky",
         top: 0,
         zIndex: 998,
@@ -46,7 +47,7 @@ export const Header = ({
         style={{ marginRight: 16 }}
       />
 
-      <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", lineHeight: "normal" }}>
         <GlobalSearchBar />
       </div>
 
