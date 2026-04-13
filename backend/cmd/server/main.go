@@ -24,9 +24,6 @@ func main() {
 	if strings.TrimSpace(cfg.JWTSecret) == "" || cfg.JWTSecret == "change_me" || cfg.JWTSecret == "rygell_super_secret_change_me" {
 		log.Fatalf("Invalid JWT_SECRET: set a strong non-default value")
 	}
-	if strings.TrimSpace(cfg.AdminPassword) == "" || cfg.AdminPassword == "admin123" || cfg.AdminPassword == "change_me" {
-		log.Fatalf("Invalid ADMIN_PASSWORD: set a strong non-default value")
-	}
 
 	// Connect to database
 	db, err := database.Connect(cfg)
@@ -41,6 +38,14 @@ func main() {
 
 	// Ensure default admin account exists
 	userRepo := repositories.NewUserRepository(db)
+	totalUsers, err := userRepo.Count()
+	if err != nil {
+		log.Fatalf("Failed to count existing users: %v", err)
+	}
+	if totalUsers == 0 && (strings.TrimSpace(cfg.AdminPassword) == "" || cfg.AdminPassword == "admin123" || cfg.AdminPassword == "change_me") {
+		log.Fatalf("Invalid ADMIN_PASSWORD: set a strong non-default value for initial admin bootstrap")
+	}
+
 	userService := services.NewUserService(userRepo, cfg.JWTSecret, cfg.JWTExpiryHours)
 	if err := userService.EnsureDefaultAdmin(cfg.AdminName, cfg.AdminUsername, cfg.AdminPassword); err != nil {
 		log.Fatalf("Failed to ensure default admin user: %v", err)
