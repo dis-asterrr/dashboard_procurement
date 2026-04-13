@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"rygell-dashboard/internal/config"
@@ -105,14 +106,37 @@ func (h *ImportHandler) ConfirmImport(c *gin.Context) {
 		return
 	}
 
-	// Resolve the full path and ensure it exists
-	filePath := filepath.Join(h.cfg.UploadDir, req.SavedAs)
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	// Validate filename and resolve inside upload directory only
+	cleanName := filepath.Clean(strings.TrimSpace(req.SavedAs))
+	if cleanName == "" || cleanName == "." || filepath.IsAbs(cleanName) || cleanName != filepath.Base(cleanName) || strings.Contains(cleanName, "..") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid saved_as value"})
+		return
+	}
+
+	uploadDirAbs, err := filepath.Abs(h.cfg.UploadDir)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to resolve upload directory"})
+		return
+	}
+
+	filePathAbs, err := filepath.Abs(filepath.Join(uploadDirAbs, cleanName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to resolve file path"})
+		return
+	}
+
+	uploadPrefix := uploadDirAbs + string(filepath.Separator)
+	if !strings.HasPrefix(filePathAbs, uploadPrefix) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid saved_as value"})
+		return
+	}
+
+	if _, err := os.Stat(filePathAbs); os.IsNotExist(err) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "file not found on server"})
 		return
 	}
 
-	result, err := h.importService.ConfirmImport(filePath)
+	result, err := h.importService.ConfirmImport(filePathAbs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

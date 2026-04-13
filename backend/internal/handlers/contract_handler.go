@@ -57,6 +57,9 @@ func (h *ContractHandler) GetAllDedicatedFix(c *gin.Context) {
 	if start > total {
 		start = total
 	}
+	if end < start {
+		end = start
+	}
 	c.JSON(http.StatusOK, contracts[start:end])
 }
 
@@ -198,6 +201,9 @@ func (h *ContractHandler) GetAllDedicatedVar(c *gin.Context) {
 	if start > total {
 		start = total
 	}
+	if end < start {
+		end = start
+	}
 	c.JSON(http.StatusOK, contracts[start:end])
 }
 
@@ -336,6 +342,9 @@ func (h *ContractHandler) GetAllOncall(c *gin.Context) {
 	}
 	if start > total {
 		start = total
+	}
+	if end < start {
+		end = start
 	}
 	c.JSON(http.StatusOK, contracts[start:end])
 }

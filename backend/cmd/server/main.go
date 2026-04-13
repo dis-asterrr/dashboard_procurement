@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	"rygell-dashboard/internal/config"
 	"rygell-dashboard/internal/database"
@@ -20,6 +21,12 @@ func main() {
 
 	// Load configuration
 	cfg := config.Load()
+	if strings.TrimSpace(cfg.JWTSecret) == "" || cfg.JWTSecret == "change_me" || cfg.JWTSecret == "rygell_super_secret_change_me" {
+		log.Fatalf("Invalid JWT_SECRET: set a strong non-default value")
+	}
+	if strings.TrimSpace(cfg.AdminPassword) == "" || cfg.AdminPassword == "admin123" || cfg.AdminPassword == "change_me" {
+		log.Fatalf("Invalid ADMIN_PASSWORD: set a strong non-default value")
+	}
 
 	// Connect to database
 	db, err := database.Connect(cfg)

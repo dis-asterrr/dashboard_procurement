@@ -252,7 +252,7 @@ export default function DashboardOverview() {
       ...fixContracts.map(c => ({
         id: `fix-${c.id}`,
         rawId: c.id,
-        resource: 'contract_dedicated_fix',
+        resource: 'contracts/dedicated-fix',
         vendor: c.vendor?.name || 'Unknown',
         date: formatDate(c.validity_start),
         msg: c.notes || `Dedicated Fix contract SPK: ${c.spk_number}`,
@@ -262,7 +262,7 @@ export default function DashboardOverview() {
       ...varContracts.map(c => ({
         id: `var-${c.id}`,
         rawId: c.id,
-        resource: 'contract_dedicated_var',
+        resource: 'contracts/dedicated-var',
         vendor: c.vendor?.name || 'Unknown',
         date: formatDate(c.validity_start),
         msg: c.notes || `Dedicated Var contract SPK: ${c.spk_number}`,
@@ -272,7 +272,7 @@ export default function DashboardOverview() {
       ...oncallContracts.map(c => ({
         id: `oncall-${c.id}`,
         rawId: c.id,
-        resource: 'contract_oncall',
+        resource: 'contracts/oncall',
         vendor: c.vendor?.name || 'Unknown',
         date: formatDate(c.validity_start),
         msg: c.notes || `Oncall contract SPK: ${c.spk_number}`,
@@ -642,7 +642,7 @@ export default function DashboardOverview() {
                     cursor: 'pointer',
                     transition: 'opacity 0.2s'
                   }}
-                  onClick={() => edit(item.type === 'Fix' ? 'contract_dedicated_fix' : item.type === 'Var' ? 'contract_dedicated_var' : 'contract_oncall', item.id)}
+                  onClick={() => edit(item.type === 'Fix' ? 'contracts/dedicated-fix' : item.type === 'Var' ? 'contracts/dedicated-var' : 'contracts/oncall', item.id)}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 >

@@ -34,11 +34,11 @@ func Load() *Config {
 		ServerPort:      getEnv("SERVER_PORT", getEnv("PORT", "8080")),
 		UploadDir:       getEnv("UPLOAD_DIR", "./uploads"),
 		FrontendOrigins: getEnv("FRONTEND_ORIGINS", "http://localhost:3000,http://localhost:3001"),
-		JWTSecret:       getEnv("JWT_SECRET", "rygell_super_secret_change_me"),
+		JWTSecret:       getEnv("JWT_SECRET", ""),
 		JWTExpiryHours:  getEnv("JWT_EXPIRY_HOURS", "24"),
 		AdminName:       getEnv("ADMIN_NAME", "Administrator"),
 		AdminUsername:   getEnv("ADMIN_USERNAME", "admin"),
-		AdminPassword:   getEnv("ADMIN_PASSWORD", "admin123"),
+		AdminPassword:   getEnv("ADMIN_PASSWORD", ""),
 	}
 }
 

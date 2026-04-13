@@ -34,6 +34,9 @@ func paginateAndRespond[T any](c *gin.Context, data []T) {
 	if start > total {
 		start = total
 	}
+	if end < start {
+		end = start
+	}
 
 	// Handle _sort and _order
 	sortField := c.DefaultQuery("_sort", "id")

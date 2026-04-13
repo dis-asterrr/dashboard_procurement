@@ -431,8 +431,61 @@ export default function DataExplorerPage() {
     setSearchText("");
   };
 
+  const csvEscape = (value: unknown) => {
+    const raw = value === null || value === undefined ? "" : String(value);
+    return `"${raw.replace(/"/g, '""')}"`;
+  };
+
   const handleExport = () => {
-    message.success("Export to Excel triggered. Download integration is ready.");
+    if (filteredRows.length === 0) {
+      message.warning("No data to export.");
+      return;
+    }
+
+    const headers = [
+      "Contract Type",
+      "SPK Number",
+      "FA Number",
+      "Vendor",
+      "Vendor Code",
+      "Mill",
+      "Route",
+      "MOT",
+      "Cost",
+      "Validity Start",
+      "Validity End",
+    ];
+
+    const lines = filteredRows.map((row) =>
+      [
+        row.contractType,
+        row.spkNumber,
+        row.faNumber,
+        row.vendorName,
+        row.vendorCode,
+        row.millName,
+        row.route,
+        row.mot,
+        row.cost ?? "",
+        formatDate(row.validityStart),
+        formatDate(row.validityEnd),
+      ]
+        .map(csvEscape)
+        .join(","),
+    );
+
+    const csvContent = [headers.map(csvEscape).join(","), ...lines].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `data-explorer-${dayjs().format("YYYYMMDD_HHmmss")}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+
+    message.success(`${filteredRows.length} rows exported.`);
   };
 
   const isTableLoading =
