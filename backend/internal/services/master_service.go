@@ -146,3 +146,17 @@ func (s *MasterService) UpdateUom(uom *models.Uom) error {
 func (s *MasterService) DeleteUom(id uint) error {
 	return s.repo.DeleteUom(id)
 }
+
+// --- Limited Search (for global search, capped results) ---
+
+func (s *MasterService) SearchVendorsLimited(search string, limit int) ([]models.Vendor, error) {
+	return s.repo.SearchVendorsLimited(search, limit)
+}
+
+func (s *MasterService) SearchMillsLimited(search string, limit int) ([]models.Mill, error) {
+	return s.repo.SearchMillsLimited(search, limit)
+}
+
+func (s *MasterService) SearchZonesLimited(search string, limit int) ([]models.Zone, error) {
+	return s.repo.SearchZonesLimited(search, limit)
+}

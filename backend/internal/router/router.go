@@ -41,7 +41,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	searchHandler := handlers.NewSearchHandler(masterService, contractService)
 	importHandler := handlers.NewImportHandler(parserService, importService, cfg)
 	exportHandler := handlers.NewExportHandler(exportService)
-	authHandler := handlers.NewAuthHandler(userService)
+	authHandler := handlers.NewAuthHandler(userService, cfg)
 
 	// --- Register Routes ---
 	api := r.Group("/api/v1")
@@ -51,9 +51,10 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 	api.POST("/auth/login", authHandler.Login)
+	api.POST("/auth/logout", authHandler.Logout)
 
 	protected := api.Group("")
-	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+	protected.Use(middleware.AuthMiddleware(cfg.JWTSecret, cfg.CookieName))
 	protected.GET("/auth/me", authHandler.Me)
 	protected.GET("/auth/users", authHandler.ListUsers)
 	protected.POST("/auth/users", authHandler.CreateUser)
@@ -136,6 +137,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 		dedicatedVar.PUT("/:id", contractHandler.UpdateDedicatedVar)
 		dedicatedVar.PATCH("/:id", contractHandler.UpdateDedicatedVar)
 		dedicatedVar.DELETE("/:id", contractHandler.DeleteDedicatedVar)
+		dedicatedVar.PATCH("/:id/agreement", contractHandler.UpdateDedicatedVarAgreement)
 	}
 
 	oncall := protected.Group("/contracts/oncall")
@@ -146,6 +148,7 @@ func Setup(db *gorm.DB, cfg *config.Config) *gin.Engine {
 		oncall.PUT("/:id", contractHandler.UpdateOncall)
 		oncall.PATCH("/:id", contractHandler.UpdateOncall)
 		oncall.DELETE("/:id", contractHandler.DeleteOncall)
+		oncall.PATCH("/:id/agreement", contractHandler.UpdateOncallAgreement)
 	}
 
 	// Audit

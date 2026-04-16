@@ -28,6 +28,10 @@ func (s *ContractService) GetAllDedicatedFix(filters map[string]interface{}, sea
 	return s.contractRepo.GetAllDedicatedFix(filters, search)
 }
 
+func (s *ContractService) GetDedicatedFixPage(filters map[string]interface{}, search string, limit, offset int) ([]models.ContractDedicatedFix, int64, error) {
+	return s.contractRepo.GetDedicatedFixPage(filters, search, limit, offset)
+}
+
 func (s *ContractService) GetDedicatedFixByID(id uint) (*models.ContractDedicatedFix, error) {
 	return s.contractRepo.GetDedicatedFixByID(id)
 }
@@ -73,6 +77,10 @@ func (s *ContractService) GetAllDedicatedVar(filters map[string]interface{}, sea
 	return s.contractRepo.GetAllDedicatedVar(filters, search)
 }
 
+func (s *ContractService) GetDedicatedVarPage(filters map[string]interface{}, search string, limit, offset int) ([]models.ContractDedicatedVar, int64, error) {
+	return s.contractRepo.GetDedicatedVarPage(filters, search, limit, offset)
+}
+
 func (s *ContractService) GetDedicatedVarByID(id uint) (*models.ContractDedicatedVar, error) {
 	return s.contractRepo.GetDedicatedVarByID(id)
 }
@@ -116,6 +124,10 @@ func (s *ContractService) UpdateDedicatedVarAgreement(id uint, changedBy, note s
 
 func (s *ContractService) GetAllOncall(filters map[string]interface{}, search string) ([]models.ContractOncall, error) {
 	return s.contractRepo.GetAllOncall(filters, search)
+}
+
+func (s *ContractService) GetOncallPage(filters map[string]interface{}, search string, limit, offset int) ([]models.ContractOncall, int64, error) {
+	return s.contractRepo.GetOncallPage(filters, search, limit, offset)
 }
 
 func (s *ContractService) GetOncallByID(id uint) (*models.ContractOncall, error) {

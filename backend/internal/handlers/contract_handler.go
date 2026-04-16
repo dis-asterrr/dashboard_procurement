@@ -23,6 +23,29 @@ func NewContractHandler(service *services.ContractService) *ContractHandler {
 	return &ContractHandler{service: service}
 }
 
+func parsePagination(c *gin.Context) (limit, offset int) {
+	startStr := c.DefaultQuery("_start", "0")
+	start, _ := strconv.Atoi(startStr)
+	if start < 0 {
+		start = 0
+	}
+
+	endStr, ok := c.GetQuery("_end")
+	if !ok {
+		return 0, start
+	}
+	end, _ := strconv.Atoi(endStr)
+	if end < start {
+		end = start
+	}
+	limit = end - start
+	offset = start
+	if limit < 0 {
+		limit = 0
+	}
+	return limit, offset
+}
+
 // --- Dedicated Fix ---
 
 func (h *ContractHandler) GetAllDedicatedFix(c *gin.Context) {
@@ -35,32 +58,15 @@ func (h *ContractHandler) GetAllDedicatedFix(c *gin.Context) {
 		filters["mill_id"] = v
 	}
 
-	contracts, err := h.service.GetAllDedicatedFix(filters, search)
+	limit, offset := parsePagination(c)
+	contracts, total, err := h.service.GetDedicatedFixPage(filters, search, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	total := len(contracts)
 	c.Header("X-Total-Count", fmt.Sprintf("%d", total))
 	c.Header("Access-Control-Expose-Headers", "X-Total-Count")
-
-	startStr := c.DefaultQuery("_start", "0")
-	endStr := c.DefaultQuery("_end", fmt.Sprintf("%d", total))
-	start, _ := strconv.Atoi(startStr)
-	end, _ := strconv.Atoi(endStr)
-	if start < 0 {
-		start = 0
-	}
-	if end > total {
-		end = total
-	}
-	if start > total {
-		start = total
-	}
-	if end < start {
-		end = start
-	}
-	c.JSON(http.StatusOK, contracts[start:end])
+	c.JSON(http.StatusOK, contracts)
 }
 
 func (h *ContractHandler) GetDedicatedFixByID(c *gin.Context) {
@@ -179,32 +185,15 @@ func (h *ContractHandler) GetAllDedicatedVar(c *gin.Context) {
 		filters["mill_id"] = v
 	}
 
-	contracts, err := h.service.GetAllDedicatedVar(filters, search)
+	limit, offset := parsePagination(c)
+	contracts, total, err := h.service.GetDedicatedVarPage(filters, search, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	total := len(contracts)
 	c.Header("X-Total-Count", fmt.Sprintf("%d", total))
 	c.Header("Access-Control-Expose-Headers", "X-Total-Count")
-
-	startStr := c.DefaultQuery("_start", "0")
-	endStr := c.DefaultQuery("_end", fmt.Sprintf("%d", total))
-	start, _ := strconv.Atoi(startStr)
-	end, _ := strconv.Atoi(endStr)
-	if start < 0 {
-		start = 0
-	}
-	if end > total {
-		end = total
-	}
-	if start > total {
-		start = total
-	}
-	if end < start {
-		end = start
-	}
-	c.JSON(http.StatusOK, contracts[start:end])
+	c.JSON(http.StatusOK, contracts)
 }
 
 func (h *ContractHandler) GetDedicatedVarByID(c *gin.Context) {
@@ -321,32 +310,15 @@ func (h *ContractHandler) GetAllOncall(c *gin.Context) {
 		filters["mill_id"] = v
 	}
 
-	contracts, err := h.service.GetAllOncall(filters, search)
+	limit, offset := parsePagination(c)
+	contracts, total, err := h.service.GetOncallPage(filters, search, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	total := len(contracts)
 	c.Header("X-Total-Count", fmt.Sprintf("%d", total))
 	c.Header("Access-Control-Expose-Headers", "X-Total-Count")
-
-	startStr := c.DefaultQuery("_start", "0")
-	endStr := c.DefaultQuery("_end", fmt.Sprintf("%d", total))
-	start, _ := strconv.Atoi(startStr)
-	end, _ := strconv.Atoi(endStr)
-	if start < 0 {
-		start = 0
-	}
-	if end > total {
-		end = total
-	}
-	if start > total {
-		start = total
-	}
-	if end < start {
-		end = start
-	}
-	c.JSON(http.StatusOK, contracts[start:end])
+	c.JSON(http.StatusOK, contracts)
 }
 
 func (h *ContractHandler) GetOncallByID(c *gin.Context) {

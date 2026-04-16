@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -140,6 +141,15 @@ func (h *ImportHandler) ConfirmImport(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Clean up the uploaded file after successful import (unless IMPORT_KEEP_FILES is true)
+	if !h.cfg.ImportKeepFiles {
+		if removeErr := os.Remove(filePathAbs); removeErr != nil {
+			log.Printf("[IMPORT] Warning: failed to remove file after import: %v", removeErr)
+		} else {
+			log.Printf("[IMPORT] Cleaned up imported file: %s", cleanName)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{

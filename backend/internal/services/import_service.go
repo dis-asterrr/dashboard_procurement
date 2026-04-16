@@ -419,14 +419,67 @@ func findField(row map[string]string, names ...string) string {
 	return ""
 }
 
-// parseDecimal converts a string to a decimal, handling common number formats.
+// parseDecimal converts a string to a decimal, handling common number formats:
+//   - 1,234.56  (US: comma=thousands, period=decimal)
+//   - 1.234,56  (EU: period=thousands, comma=decimal)
+//   - 1234,56   (EU short)
+//   - 1234.56   (US short)
+//   - 1 234,56  (space thousands)
+//   - 1 234.56  (space thousands)
 func parseDecimal(s string) decimal.Decimal {
 	if s == "" {
 		return decimal.Zero
 	}
-	// Remove thousand separators and whitespace
-	cleaned := strings.ReplaceAll(s, ",", "")
-	cleaned = strings.ReplaceAll(cleaned, " ", "")
+
+	// Remove whitespace (space thousands separators and surrounding whitespace)
+	cleaned := strings.ReplaceAll(s, " ", "")
+	cleaned = strings.ReplaceAll(cleaned, "\u00a0", "") // non-breaking space
+
+	if cleaned == "" {
+		return decimal.Zero
+	}
+
+	lastComma := strings.LastIndex(cleaned, ",")
+	lastDot := strings.LastIndex(cleaned, ".")
+
+	switch {
+	case lastComma == -1 && lastDot == -1:
+		// No separators: plain integer like "12345"
+	case lastComma == -1 && lastDot >= 0:
+		// Only dots: could be "1.234.567" (thousands) or "1234.56" (decimal)
+		if strings.Count(cleaned, ".") > 1 {
+			// Multiple dots → all are thousands separators
+			cleaned = strings.ReplaceAll(cleaned, ".", "")
+		}
+		// Single dot → it's the decimal point, leave as-is
+	case lastDot == -1 && lastComma >= 0:
+		// Only commas: could be "1,234,567" (thousands) or "1234,56" (decimal)
+		if strings.Count(cleaned, ",") > 1 {
+			// Multiple commas → all are thousands separators
+			cleaned = strings.ReplaceAll(cleaned, ",", "")
+		} else {
+			// Single comma: check position from the end
+			afterComma := len(cleaned) - lastComma - 1
+			if afterComma == 3 {
+				// e.g. "1,234" → thousands separator (ambiguous, but standard)
+				cleaned = strings.ReplaceAll(cleaned, ",", "")
+			} else {
+				// e.g. "1,25" or "1234,56" → comma is decimal separator
+				cleaned = strings.ReplaceAll(cleaned, ",", ".")
+			}
+		}
+	default:
+		// Both dots and commas present
+		if lastComma > lastDot {
+			// "1.234,56" → dot=thousands, comma=decimal
+			cleaned = strings.ReplaceAll(cleaned, ".", "")
+			cleaned = strings.ReplaceAll(cleaned, ",", ".")
+		} else {
+			// "1,234.56" → comma=thousands, dot=decimal
+			cleaned = strings.ReplaceAll(cleaned, ",", "")
+		}
+	}
+
 	// Try to parse as float first for scientific notation
 	if val, err := strconv.ParseFloat(cleaned, 64); err == nil {
 		return decimal.NewFromFloat(val)

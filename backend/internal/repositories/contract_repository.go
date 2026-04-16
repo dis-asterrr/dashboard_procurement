@@ -17,53 +17,84 @@ func NewContractRepository(db *gorm.DB) *ContractRepository {
 	return &ContractRepository{db: db}
 }
 
-// --- Dedicated Fix ---
-
-func (r *ContractRepository) GetAllDedicatedFix(filters map[string]interface{}, search string) ([]models.ContractDedicatedFix, error) {
-	var contracts []models.ContractDedicatedFix
-	query := r.db.Preload("Mill").Preload("Vendor").Preload("Product")
+func applyCommonContractFilters(query *gorm.DB, filters map[string]interface{}) *gorm.DB {
 	if v, ok := filters["vendor_id"]; ok && v != "" {
 		query = query.Where("vendor_id = ?", v)
 	}
 	if v, ok := filters["mill_id"]; ok && v != "" {
 		query = query.Where("mill_id = ?", v)
 	}
-	if search != "" {
-		like := "%" + search + "%"
-		query = query.Select("DISTINCT contract_dedicated_fixes.*").
-			Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_fixes.vendor_id").
-			Joins("LEFT JOIN mills ON mills.id = contract_dedicated_fixes.mill_id").
-			Joins("LEFT JOIN products ON products.id = contract_dedicated_fixes.product_id").
-			Joins("LEFT JOIN mots ON mots.id = contract_dedicated_fixes.mot_id").
-			Joins("LEFT JOIN uoms ON uoms.id = contract_dedicated_fixes.uom_id").
-			Where(`
-				contract_dedicated_fixes.spk_number ILIKE ? OR
-				contract_dedicated_fixes.fa_number ILIKE ? OR
-				contract_dedicated_fixes.area_category ILIKE ? OR
-				contract_dedicated_fixes.proposal_cfas ILIKE ? OR
-				contract_dedicated_fixes.license_plate ILIKE ? OR
-				contract_dedicated_fixes.notes ILIKE ? OR
-				vendors.name ILIKE ? OR
-				vendors.code ILIKE ? OR
-				mills.name ILIKE ? OR
-				mills.code ILIKE ? OR
-				products.name ILIKE ? OR
-				mots.name ILIKE ? OR
-				uoms.name ILIKE ? OR
-				CAST(contract_dedicated_fixes.fix_cost AS TEXT) ILIKE ? OR
-				CAST(contract_dedicated_fixes.distributed_cost AS TEXT) ILIKE ? OR
-				CAST(contract_dedicated_fixes.unit_cost AS TEXT) ILIKE ? OR
-				CAST(contract_dedicated_fixes.cost_per_kg AS TEXT) ILIKE ? OR
-				CAST(contract_dedicated_fixes.cost_per_kgkm AS TEXT) ILIKE ? OR
-				CAST(contract_dedicated_fixes.cargo_carried AS TEXT) ILIKE ?
-			`,
-				like, like, like, like, like, like,
-				like, like, like, like, like, like, like,
-				like, like, like, like, like, like,
-			)
+	return query
+}
+
+func (r *ContractRepository) buildDedicatedFixQuery(filters map[string]interface{}, search string) *gorm.DB {
+	query := r.db.Model(&models.ContractDedicatedFix{}).Preload("Mill").Preload("Vendor").Preload("Product")
+	query = applyCommonContractFilters(query, filters)
+	if search == "" {
+		return query
 	}
+	like := "%" + search + "%"
+	return query.Select("DISTINCT contract_dedicated_fixes.*").
+		Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_fixes.vendor_id").
+		Joins("LEFT JOIN mills ON mills.id = contract_dedicated_fixes.mill_id").
+		Joins("LEFT JOIN products ON products.id = contract_dedicated_fixes.product_id").
+		Joins("LEFT JOIN mots ON mots.id = contract_dedicated_fixes.mot_id").
+		Joins("LEFT JOIN uoms ON uoms.id = contract_dedicated_fixes.uom_id").
+		Where(`
+			contract_dedicated_fixes.spk_number ILIKE ? OR
+			contract_dedicated_fixes.fa_number ILIKE ? OR
+			contract_dedicated_fixes.area_category ILIKE ? OR
+			contract_dedicated_fixes.proposal_cfas ILIKE ? OR
+			contract_dedicated_fixes.license_plate ILIKE ? OR
+			contract_dedicated_fixes.notes ILIKE ? OR
+			vendors.name ILIKE ? OR
+			vendors.code ILIKE ? OR
+			mills.name ILIKE ? OR
+			mills.code ILIKE ? OR
+			products.name ILIKE ? OR
+			mots.name ILIKE ? OR
+			uoms.name ILIKE ? OR
+			CAST(contract_dedicated_fixes.fix_cost AS TEXT) ILIKE ? OR
+			CAST(contract_dedicated_fixes.distributed_cost AS TEXT) ILIKE ? OR
+			CAST(contract_dedicated_fixes.unit_cost AS TEXT) ILIKE ? OR
+			CAST(contract_dedicated_fixes.cost_per_kg AS TEXT) ILIKE ? OR
+			CAST(contract_dedicated_fixes.cost_per_kgkm AS TEXT) ILIKE ? OR
+			CAST(contract_dedicated_fixes.cargo_carried AS TEXT) ILIKE ?
+		`,
+			like, like, like, like, like, like,
+			like, like, like, like, like, like, like,
+			like, like, like, like, like, like,
+		)
+}
+
+// --- Dedicated Fix ---
+
+func (r *ContractRepository) GetAllDedicatedFix(filters map[string]interface{}, search string) ([]models.ContractDedicatedFix, error) {
+	var contracts []models.ContractDedicatedFix
+	query := r.buildDedicatedFixQuery(filters, search)
 	err := query.Order("contract_dedicated_fixes.id ASC").Find(&contracts).Error
 	return contracts, err
+}
+
+func (r *ContractRepository) GetDedicatedFixPage(filters map[string]interface{}, search string, limit, offset int) ([]models.ContractDedicatedFix, int64, error) {
+	var contracts []models.ContractDedicatedFix
+	query := r.buildDedicatedFixQuery(filters, search)
+	countQuery := query.Session(&gorm.Session{})
+	var total int64
+	if err := countQuery.Distinct("contract_dedicated_fixes.id").Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+	if err := query.Order("contract_dedicated_fixes.id ASC").Find(&contracts).Error; err != nil {
+		return nil, 0, err
+	}
+	return contracts, total, nil
 }
 
 func (r *ContractRepository) GetDedicatedFixByID(id uint) (*models.ContractDedicatedFix, error) {
@@ -98,14 +129,9 @@ func (r *ContractRepository) FindDedicatedFixBySPK(spk string) (*models.Contract
 
 func (r *ContractRepository) GetAllDedicatedVar(filters map[string]interface{}, search string) ([]models.ContractDedicatedVar, error) {
 	var contracts []models.ContractDedicatedVar
-	query := r.db.Preload("Mill").Preload("Vendor").Preload("Product").
+	query := r.db.Model(&models.ContractDedicatedVar{}).Preload("Mill").Preload("Vendor").Preload("Product").
 		Preload("OriginZone").Preload("DestZone").Preload("Mot").Preload("Uom")
-	if v, ok := filters["vendor_id"]; ok && v != "" {
-		query = query.Where("vendor_id = ?", v)
-	}
-	if v, ok := filters["mill_id"]; ok && v != "" {
-		query = query.Where("mill_id = ?", v)
-	}
+	query = applyCommonContractFilters(query, filters)
 	if search != "" {
 		like := "%" + search + "%"
 		query = query.Select("DISTINCT contract_dedicated_vars.*").
@@ -133,7 +159,7 @@ func (r *ContractRepository) GetAllDedicatedVar(filters map[string]interface{}, 
 				uoms.name ILIKE ? OR
 				CAST(contract_dedicated_vars.distance AS TEXT) ILIKE ? OR
 				CAST(contract_dedicated_vars.payload AS TEXT) ILIKE ? OR
-				CAST(contract_dedicated_vars.cost_idr AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.cost_id_r AS TEXT) ILIKE ? OR
 				CAST(contract_dedicated_vars.cost_per_kg AS TEXT) ILIKE ? OR
 				CAST(contract_dedicated_vars.cost_per_kgkm AS TEXT) ILIKE ?
 			`,
@@ -144,6 +170,66 @@ func (r *ContractRepository) GetAllDedicatedVar(filters map[string]interface{}, 
 	}
 	err := query.Order("contract_dedicated_vars.id ASC").Find(&contracts).Error
 	return contracts, err
+}
+
+func (r *ContractRepository) GetDedicatedVarPage(filters map[string]interface{}, search string, limit, offset int) ([]models.ContractDedicatedVar, int64, error) {
+	var contracts []models.ContractDedicatedVar
+	query := r.db.Model(&models.ContractDedicatedVar{}).Preload("Mill").Preload("Vendor").Preload("Product").
+		Preload("OriginZone").Preload("DestZone").Preload("Mot").Preload("Uom")
+	query = applyCommonContractFilters(query, filters)
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Select("DISTINCT contract_dedicated_vars.*").
+			Joins("LEFT JOIN vendors ON vendors.id = contract_dedicated_vars.vendor_id").
+			Joins("LEFT JOIN mills ON mills.id = contract_dedicated_vars.mill_id").
+			Joins("LEFT JOIN products ON products.id = contract_dedicated_vars.product_id").
+			Joins("LEFT JOIN zones AS origin_zones ON origin_zones.id = contract_dedicated_vars.origin_zone_id").
+			Joins("LEFT JOIN zones AS dest_zones ON dest_zones.id = contract_dedicated_vars.dest_zone_id").
+			Joins("LEFT JOIN mots ON mots.id = contract_dedicated_vars.mot_id").
+			Joins("LEFT JOIN uoms ON uoms.id = contract_dedicated_vars.uom_id").
+			Where(`
+				contract_dedicated_vars.spk_number ILIKE ? OR
+				contract_dedicated_vars.fa_number ILIKE ? OR
+				contract_dedicated_vars.area_category ILIKE ? OR
+				contract_dedicated_vars.proposal_cfas ILIKE ? OR
+				contract_dedicated_vars.notes ILIKE ? OR
+				vendors.name ILIKE ? OR
+				vendors.code ILIKE ? OR
+				mills.name ILIKE ? OR
+				mills.code ILIKE ? OR
+				products.name ILIKE ? OR
+				origin_zones.name ILIKE ? OR
+				dest_zones.name ILIKE ? OR
+				mots.name ILIKE ? OR
+				uoms.name ILIKE ? OR
+				CAST(contract_dedicated_vars.distance AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.payload AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.cost_id_r AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.cost_per_kg AS TEXT) ILIKE ? OR
+				CAST(contract_dedicated_vars.cost_per_kgkm AS TEXT) ILIKE ?
+			`,
+				like, like, like, like, like,
+				like, like, like, like, like, like, like, like, like,
+				like, like, like, like, like,
+			)
+	}
+
+	countQuery := query.Session(&gorm.Session{})
+	var total int64
+	if err := countQuery.Distinct("contract_dedicated_vars.id").Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+	if err := query.Order("contract_dedicated_vars.id ASC").Find(&contracts).Error; err != nil {
+		return nil, 0, err
+	}
+	return contracts, total, nil
 }
 
 func (r *ContractRepository) GetDedicatedVarByID(id uint) (*models.ContractDedicatedVar, error) {
@@ -180,14 +266,9 @@ func (r *ContractRepository) FindDedicatedVarBySPK(spk string) (*models.Contract
 
 func (r *ContractRepository) GetAllOncall(filters map[string]interface{}, search string) ([]models.ContractOncall, error) {
 	var contracts []models.ContractOncall
-	query := r.db.Preload("Mill").Preload("Vendor").Preload("Product").
+	query := r.db.Model(&models.ContractOncall{}).Preload("Mill").Preload("Vendor").Preload("Product").
 		Preload("OriginZone").Preload("DestZone").Preload("Mot").Preload("Uom")
-	if v, ok := filters["vendor_id"]; ok && v != "" {
-		query = query.Where("vendor_id = ?", v)
-	}
-	if v, ok := filters["mill_id"]; ok && v != "" {
-		query = query.Where("mill_id = ?", v)
-	}
+	query = applyCommonContractFilters(query, filters)
 	if search != "" {
 		like := "%" + search + "%"
 		query = query.Select("DISTINCT contract_oncalls.*").
@@ -217,10 +298,10 @@ func (r *ContractRepository) GetAllOncall(filters map[string]interface{}, search
 				CAST(contract_oncalls.payload AS TEXT) ILIKE ? OR
 				CAST(contract_oncalls.loading_cost AS TEXT) ILIKE ? OR
 				CAST(contract_oncalls.unloading_cost AS TEXT) ILIKE ? OR
-				CAST(contract_oncalls.cost_idr AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.cost_id_r AS TEXT) ILIKE ? OR
 				CAST(contract_oncalls.cost_per_kg AS TEXT) ILIKE ? OR
 				CAST(contract_oncalls.cost_per_ton AS TEXT) ILIKE ? OR
-				CAST(contract_oncalls.running_cost_idr AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.running_cost_id_r AS TEXT) ILIKE ? OR
 				CAST(contract_oncalls.running_cost_usd AS TEXT) ILIKE ?
 			`,
 				like, like, like, like, like,
@@ -230,6 +311,70 @@ func (r *ContractRepository) GetAllOncall(filters map[string]interface{}, search
 	}
 	err := query.Order("contract_oncalls.id ASC").Find(&contracts).Error
 	return contracts, err
+}
+
+func (r *ContractRepository) GetOncallPage(filters map[string]interface{}, search string, limit, offset int) ([]models.ContractOncall, int64, error) {
+	var contracts []models.ContractOncall
+	query := r.db.Model(&models.ContractOncall{}).Preload("Mill").Preload("Vendor").Preload("Product").
+		Preload("OriginZone").Preload("DestZone").Preload("Mot").Preload("Uom")
+	query = applyCommonContractFilters(query, filters)
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Select("DISTINCT contract_oncalls.*").
+			Joins("LEFT JOIN vendors ON vendors.id = contract_oncalls.vendor_id").
+			Joins("LEFT JOIN mills ON mills.id = contract_oncalls.mill_id").
+			Joins("LEFT JOIN products ON products.id = contract_oncalls.product_id").
+			Joins("LEFT JOIN zones AS origin_zones ON origin_zones.id = contract_oncalls.origin_zone_id").
+			Joins("LEFT JOIN zones AS dest_zones ON dest_zones.id = contract_oncalls.dest_zone_id").
+			Joins("LEFT JOIN mots ON mots.id = contract_oncalls.mot_id").
+			Joins("LEFT JOIN uoms ON uoms.id = contract_oncalls.uom_id").
+			Where(`
+				contract_oncalls.spk_number ILIKE ? OR
+				contract_oncalls.fa_number ILIKE ? OR
+				contract_oncalls.area_category ILIKE ? OR
+				contract_oncalls.proposal_cfas ILIKE ? OR
+				contract_oncalls.notes ILIKE ? OR
+				vendors.name ILIKE ? OR
+				vendors.code ILIKE ? OR
+				mills.name ILIKE ? OR
+				mills.code ILIKE ? OR
+				products.name ILIKE ? OR
+				origin_zones.name ILIKE ? OR
+				dest_zones.name ILIKE ? OR
+				mots.name ILIKE ? OR
+				uoms.name ILIKE ? OR
+				CAST(contract_oncalls.distance AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.payload AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.loading_cost AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.unloading_cost AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.cost_id_r AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.cost_per_kg AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.cost_per_ton AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.running_cost_id_r AS TEXT) ILIKE ? OR
+				CAST(contract_oncalls.running_cost_usd AS TEXT) ILIKE ?
+			`,
+				like, like, like, like, like,
+				like, like, like, like, like, like, like, like, like,
+				like, like, like, like, like, like, like, like, like,
+			)
+	}
+
+	countQuery := query.Session(&gorm.Session{})
+	var total int64
+	if err := countQuery.Distinct("contract_oncalls.id").Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+	if err := query.Order("contract_oncalls.id ASC").Find(&contracts).Error; err != nil {
+		return nil, 0, err
+	}
+	return contracts, total, nil
 }
 
 func (r *ContractRepository) GetOncallByID(id uint) (*models.ContractOncall, error) {

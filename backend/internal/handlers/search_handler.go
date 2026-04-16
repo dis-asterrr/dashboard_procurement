@@ -11,6 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// searchLimit is the maximum number of results per category in global search.
+const searchLimit = 10
+
 type SearchHandler struct {
 	masterService   *services.MasterService
 	contractService *services.ContractService
@@ -38,9 +41,9 @@ func (h *SearchHandler) Search(c *gin.Context) {
 
 	results := make([]SearchItem, 0, 50)
 
-	// --- Master data searches (each independent, failures are logged & skipped) ---
+	// --- Master data searches (limited per category) ---
 
-	if vendors, err := h.masterService.GetAllVendors(q); err != nil {
+	if vendors, err := h.masterService.SearchVendorsLimited(q, searchLimit); err != nil {
 		log.Printf("[SEARCH] vendors query failed for q=%q: %v", q, err)
 	} else {
 		for _, item := range vendors {
@@ -52,7 +55,7 @@ func (h *SearchHandler) Search(c *gin.Context) {
 		}
 	}
 
-	if mills, err := h.masterService.GetAllMills(q); err != nil {
+	if mills, err := h.masterService.SearchMillsLimited(q, searchLimit); err != nil {
 		log.Printf("[SEARCH] mills query failed for q=%q: %v", q, err)
 	} else {
 		for _, item := range mills {
@@ -64,7 +67,7 @@ func (h *SearchHandler) Search(c *gin.Context) {
 		}
 	}
 
-	if zones, err := h.masterService.GetAllZones(q); err != nil {
+	if zones, err := h.masterService.SearchZonesLimited(q, searchLimit); err != nil {
 		log.Printf("[SEARCH] zones query failed for q=%q: %v", q, err)
 	} else {
 		for _, item := range zones {
@@ -76,11 +79,11 @@ func (h *SearchHandler) Search(c *gin.Context) {
 		}
 	}
 
-	// --- Contract searches (each independent) ---
+	// --- Contract searches (using paginated queries with limit) ---
 
 	emptyFilters := map[string]interface{}{}
 
-	if dedicatedFix, err := h.contractService.GetAllDedicatedFix(emptyFilters, q); err != nil {
+	if dedicatedFix, _, err := h.contractService.GetDedicatedFixPage(emptyFilters, q, searchLimit, 0); err != nil {
 		log.Printf("[SEARCH] dedicated-fix query failed for q=%q: %v", q, err)
 	} else {
 		for _, item := range dedicatedFix {
@@ -92,7 +95,7 @@ func (h *SearchHandler) Search(c *gin.Context) {
 		}
 	}
 
-	if dedicatedVar, err := h.contractService.GetAllDedicatedVar(emptyFilters, q); err != nil {
+	if dedicatedVar, _, err := h.contractService.GetDedicatedVarPage(emptyFilters, q, searchLimit, 0); err != nil {
 		log.Printf("[SEARCH] dedicated-var query failed for q=%q: %v", q, err)
 	} else {
 		for _, item := range dedicatedVar {
@@ -112,7 +115,7 @@ func (h *SearchHandler) Search(c *gin.Context) {
 		}
 	}
 
-	if oncall, err := h.contractService.GetAllOncall(emptyFilters, q); err != nil {
+	if oncall, _, err := h.contractService.GetOncallPage(emptyFilters, q, searchLimit, 0); err != nil {
 		log.Printf("[SEARCH] oncall query failed for q=%q: %v", q, err)
 	} else {
 		for _, item := range oncall {
@@ -163,11 +166,11 @@ func buildContractLabelWithRoute(id uint, spkNumber string, vendorName string, m
 	dest := strings.TrimSpace(destZone)
 
 	if origin != "" && dest != "" {
-		label += fmt.Sprintf(" [%s → %s]", origin, dest)
+		label += fmt.Sprintf(" [%s -> %s]", origin, dest)
 	} else if origin != "" {
 		label += fmt.Sprintf(" [%s]", origin)
 	} else if dest != "" {
-		label += fmt.Sprintf(" [→ %s]", dest)
+		label += fmt.Sprintf(" [-> %s]", dest)
 	}
 
 	return label

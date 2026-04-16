@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"strings"
 
 	"rygell-dashboard/internal/config"
 	"rygell-dashboard/internal/models"
@@ -10,6 +11,22 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+// parseLogLevel converts DB_LOG_LEVEL string to a GORM logger.LogLevel.
+func parseLogLevel(level string) logger.LogLevel {
+	switch strings.ToLower(strings.TrimSpace(level)) {
+	case "silent":
+		return logger.Silent
+	case "error":
+		return logger.Error
+	case "warn":
+		return logger.Warn
+	case "info":
+		return logger.Info
+	default:
+		return logger.Warn
+	}
+}
 
 // Connect establishes a connection to the PostgreSQL database.
 func Connect(cfg *config.Config) (*gorm.DB, error) {
@@ -21,8 +38,10 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 		)
 	}
 
+	logLevel := parseLogLevel(cfg.DBLogLevel)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logLevel),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)

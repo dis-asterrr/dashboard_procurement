@@ -8,22 +8,29 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
+func AuthMiddleware(jwtSecret string, cookieName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		rawToken := ""
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
-			return
-		}
-
 		const bearerPrefix = "Bearer "
-		if !strings.HasPrefix(authHeader, bearerPrefix) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header"})
-			return
+		if strings.HasPrefix(authHeader, bearerPrefix) {
+			rawToken = strings.TrimPrefix(authHeader, bearerPrefix)
 		}
 
-		rawToken := strings.TrimPrefix(authHeader, bearerPrefix)
+		if rawToken == "" && cookieName != "" {
+			if cookie, err := c.Cookie(cookieName); err == nil {
+				rawToken = cookie
+			}
+		}
+
+		if rawToken == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
+			return
+		}
 		token, err := jwt.Parse(rawToken, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
 			return []byte(jwtSecret), nil
 		})
 		if err != nil || !token.Valid {

@@ -34,13 +34,25 @@ func NewUserService(repo *repositories.UserRepository, jwtSecret string, jwtExpi
 }
 
 func (s *UserService) EnsureDefaultAdmin(name, username, password string) error {
-	total, err := s.repo.Count()
-	if err != nil {
+	return s.EnsureDefaultAdminWithSync(name, username, password, false)
+}
+
+func (s *UserService) EnsureDefaultAdminWithSync(name, username, password string, syncPassword bool) error {
+	existingAdmin, err := s.repo.FindByUsername(username)
+	if err == nil {
+		if !syncPassword {
+			return nil
+		}
+		hash, hashErr := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if hashErr != nil {
+			return hashErr
+		}
+		return s.repo.UpdatePasswordHash(existingAdmin.ID, string(hash))
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
-	if total > 0 {
-		return nil
-	}
+
 	_, err = s.CreateUser(name, username, password)
 	return err
 }

@@ -23,13 +23,25 @@ This project is prepared for:
 DATABASE_URL=<your_neon_connection_string>
 DB_SSLMODE=require
 FRONTEND_ORIGINS=https://<your-vercel-domain>
-JWT_SECRET=<strong_random_secret>
+JWT_SECRET=<strong_random_secret_at_least_32_chars>
 JWT_EXPIRY_HOURS=24
 ADMIN_NAME=Administrator
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=<strong_password>
 UPLOAD_DIR=/app/uploads
+
+# Database logging: silent, error, warn, info (default: warn)
+DB_LOG_LEVEL=warn
+
+# Set to true to keep uploaded Excel files after import confirmation (default: false)
+IMPORT_KEEP_FILES=false
 ```
+
+### Secret Policy
+
+- **`JWT_SECRET`**: Must be at least 32 characters and must not be a known default/placeholder value. The application will refuse to start if this requirement is not met.
+- **`ADMIN_PASSWORD`**: Must be a strong, non-default password. The application will refuse to bootstrap the admin user with weak or placeholder passwords.
+- **`DB_PASSWORD`**: Must be set in the environment; no hardcoded defaults are used.
 
 Notes:
 - `PORT` is injected by Railway automatically and now supported by backend.
@@ -49,6 +61,8 @@ NEXT_PUBLIC_API_URL=https://<your-railway-domain>/api/v1
 
 4. Deploy and copy the generated Vercel domain.
 
+> **Note**: The frontend uses a local font file (`GeistVF.woff`) and does not require internet access to Google Fonts during build.
+
 ## 4. Final Wiring
 
 1. Update Railway `FRONTEND_ORIGINS` with your actual Vercel domain.
@@ -59,3 +73,12 @@ NEXT_PUBLIC_API_URL=https://<your-railway-domain>/api/v1
 
 - Backend template: `backend/.env.example`
 - Frontend template: `frontend/.env.example`
+
+### New Environment Variables Reference
+
+| Variable | Default | Description |
+|---|---|---|
+| `DB_LOG_LEVEL` | `warn` | GORM log level: `silent`, `error`, `warn`, `info` |
+| `IMPORT_KEEP_FILES` | `false` | Keep uploaded Excel files after successful import |
+| `JWT_SECRET` | _(required)_ | Must be ≥ 32 chars, non-default |
+| `ADMIN_PASSWORD` | _(required)_ | Must be strong, non-default |

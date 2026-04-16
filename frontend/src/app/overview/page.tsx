@@ -20,7 +20,7 @@ import {
   PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
-import { getToken } from "@/lib/auth";
+import { apiClient } from "@/lib/api-client";
 import AppSpinner from "@/components/common/app-spinner";
 
 const { Title, Text } = Typography;
@@ -45,6 +45,10 @@ const formatDate = (dateStr: string | null | undefined) => {
 // Colors for charts (These remain static hex as they represent data visualization lines/bars)
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
+const KPI_ICON_BOX_SIZE = 36;
+const KPI_ICON_SIZE = 18;
+const KPI_HEADER_MIN_HEIGHT = 44;
+
 export default function DashboardOverview() {
   const { token } = theme.useToken();
   const { edit } = useNavigation();
@@ -63,15 +67,13 @@ export default function DashboardOverview() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = getToken();
-        const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
         const [fRes, vRes, oRes, mRes, venRes, motRes] = await Promise.all([
-          fetch(`${API_URL}/contracts/dedicated-fix?_start=0&_end=9999`, { headers }).then(r => r.json().catch(() => [])),
-          fetch(`${API_URL}/contracts/dedicated-var?_start=0&_end=9999`, { headers }).then(r => r.json().catch(() => [])),
-          fetch(`${API_URL}/contracts/oncall?_start=0&_end=9999`, { headers }).then(r => r.json().catch(() => [])),
-          fetch(`${API_URL}/mills?_start=0&_end=9999`, { headers }).then(r => r.json().catch(() => [])),
-          fetch(`${API_URL}/vendors?_start=0&_end=9999`, { headers }).then(r => r.json().catch(() => [])),
-          fetch(`${API_URL}/mots?_start=0&_end=9999`, { headers }).then(r => r.json().catch(() => [])),
+          apiClient.get(`${API_URL}/contracts/dedicated-fix`, { params: { _start: 0, _end: 9999 } }).then(r => r.data).catch(() => []),
+          apiClient.get(`${API_URL}/contracts/dedicated-var`, { params: { _start: 0, _end: 9999 } }).then(r => r.data).catch(() => []),
+          apiClient.get(`${API_URL}/contracts/oncall`, { params: { _start: 0, _end: 9999 } }).then(r => r.data).catch(() => []),
+          apiClient.get(`${API_URL}/mills`, { params: { _start: 0, _end: 9999 } }).then(r => r.data).catch(() => []),
+          apiClient.get(`${API_URL}/vendors`, { params: { _start: 0, _end: 9999 } }).then(r => r.data).catch(() => []),
+          apiClient.get(`${API_URL}/mots`, { params: { _start: 0, _end: 9999 } }).then(r => r.data).catch(() => []),
         ]);
 
         setFixContracts(Array.isArray(fRes) ? fRes : []);
@@ -318,10 +320,10 @@ export default function DashboardOverview() {
       <Row gutter={[24, 24]}>
         <Col xs={24} sm={12} lg={6}>
           <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '12px', height: '100%', border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowTertiary }}>
-            <Flex justify="space-between" style={{ marginBottom: 16 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 16, minHeight: KPI_HEADER_MIN_HEIGHT }}>
               <Text strong style={{ fontSize: '15px' }}>Total Landed Cost</Text>
-              <div style={{ padding: '8px', backgroundColor: token.colorPrimaryBg, borderRadius: '8px', display: 'flex' }}>
-                <DollarOutlined style={{ color: token.colorPrimary, fontSize: '18px' }} />
+              <div style={{ width: KPI_ICON_BOX_SIZE, height: KPI_ICON_BOX_SIZE, backgroundColor: token.colorPrimaryBg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <DollarOutlined style={{ color: token.colorPrimary, fontSize: KPI_ICON_SIZE }} />
               </div>
             </Flex>
             <Title level={3} style={{ margin: '0 0 8px 0', fontWeight: 700 }}>{formatIDR(totalLandedCost)}</Title>
@@ -331,10 +333,10 @@ export default function DashboardOverview() {
 
         <Col xs={24} sm={12} lg={6}>
           <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '12px', height: '100%', border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowTertiary }}>
-            <Flex justify="space-between" style={{ marginBottom: 16 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 16, minHeight: KPI_HEADER_MIN_HEIGHT }}>
               <Text strong style={{ fontSize: '15px' }}>Avg. Running Cost</Text>
-              <div style={{ padding: '8px', backgroundColor: token.colorSuccessBg, borderRadius: '8px', display: 'flex' }}>
-                <ThunderboltOutlined style={{ color: token.colorSuccess, fontSize: '18px' }} />
+              <div style={{ width: KPI_ICON_BOX_SIZE, height: KPI_ICON_BOX_SIZE, backgroundColor: token.colorSuccessBg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <ThunderboltOutlined style={{ color: token.colorSuccess, fontSize: KPI_ICON_SIZE }} />
               </div>
             </Flex>
             <Title level={3} style={{ margin: '0 0 8px 0', fontWeight: 700 }}>{avgRunningCost} <span style={{ fontSize: 14, fontWeight: 'normal', color: token.colorTextSecondary }}>IDR/T/K</span></Title>
@@ -344,10 +346,10 @@ export default function DashboardOverview() {
 
         <Col xs={24} sm={12} lg={6}>
           <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '12px', height: '100%', border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowTertiary }}>
-            <Flex justify="space-between" style={{ marginBottom: 16 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 16, minHeight: KPI_HEADER_MIN_HEIGHT }}>
               <Text strong style={{ fontSize: '15px' }}>Expiring Contracts</Text>
-              <div style={{ padding: '8px', backgroundColor: token.colorWarningBg, borderRadius: '8px', display: 'flex' }}>
-                <AlertOutlined style={{ color: token.colorWarning, fontSize: '18px' }} />
+              <div style={{ width: KPI_ICON_BOX_SIZE, height: KPI_ICON_BOX_SIZE, backgroundColor: token.colorWarningBg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <AlertOutlined style={{ color: token.colorWarning, fontSize: KPI_ICON_SIZE }} />
               </div>
             </Flex>
             <Title level={3} style={{ margin: '0 0 8px 0', fontWeight: 700, color: token.colorWarning }}>
@@ -359,10 +361,10 @@ export default function DashboardOverview() {
 
         <Col xs={24} sm={12} lg={6}>
           <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '12px', height: '100%', border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowTertiary }}>
-            <Flex justify="space-between" style={{ marginBottom: 16 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 16, minHeight: KPI_HEADER_MIN_HEIGHT }}>
               <Text strong style={{ fontSize: '15px' }}>Registered Vendors</Text>
-              <div style={{ padding: '8px', backgroundColor: token.colorInfoBg, borderRadius: '8px', display: 'flex' }}>
-                <CheckCircleOutlined style={{ color: token.colorInfo, fontSize: '18px' }} />
+              <div style={{ width: KPI_ICON_BOX_SIZE, height: KPI_ICON_BOX_SIZE, backgroundColor: token.colorInfoBg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <CheckCircleOutlined style={{ color: token.colorInfo, fontSize: KPI_ICON_SIZE }} />
               </div>
             </Flex>
             <Title level={3} style={{ margin: '0 0 8px 0', fontWeight: 700, color: token.colorText }}>

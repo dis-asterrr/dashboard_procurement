@@ -29,6 +29,18 @@ func (r *MasterRepository) GetAllMills(search string) ([]models.Mill, error) {
 	return mills, err
 }
 
+// SearchMillsLimited returns at most `limit` mills matching the search query.
+func (r *MasterRepository) SearchMillsLimited(search string, limit int) ([]models.Mill, error) {
+	var mills []models.Mill
+	query := r.db
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ? OR code ILIKE ?", like, like)
+	}
+	err := query.Order("id ASC").Limit(limit).Find(&mills).Error
+	return mills, err
+}
+
 func (r *MasterRepository) GetMillByID(id uint) (*models.Mill, error) {
 	var mill models.Mill
 	err := r.db.First(&mill, id).Error
@@ -57,6 +69,18 @@ func (r *MasterRepository) GetAllVendors(search string) ([]models.Vendor, error)
 		query = query.Where("name ILIKE ? OR code ILIKE ? OR email ILIKE ? OR contact_person ILIKE ? OR phone ILIKE ? OR address ILIKE ?", like, like, like, like, like, like)
 	}
 	err := query.Order("id ASC").Find(&vendors).Error
+	return vendors, err
+}
+
+// SearchVendorsLimited returns at most `limit` vendors matching the search query.
+func (r *MasterRepository) SearchVendorsLimited(search string, limit int) ([]models.Vendor, error) {
+	var vendors []models.Vendor
+	query := r.db
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ? OR code ILIKE ? OR email ILIKE ? OR contact_person ILIKE ? OR phone ILIKE ? OR address ILIKE ?", like, like, like, like, like, like)
+	}
+	err := query.Order("id ASC").Limit(limit).Find(&vendors).Error
 	return vendors, err
 }
 
@@ -119,6 +143,18 @@ func (r *MasterRepository) GetAllZones(search string) ([]models.Zone, error) {
 		query = query.Where("name ILIKE ? OR type ILIKE ?", like, like)
 	}
 	err := query.Order("id ASC").Find(&zones).Error
+	return zones, err
+}
+
+// SearchZonesLimited returns at most `limit` zones matching the search query.
+func (r *MasterRepository) SearchZonesLimited(search string, limit int) ([]models.Zone, error) {
+	var zones []models.Zone
+	query := r.db
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ? OR type ILIKE ?", like, like)
+	}
+	err := query.Order("id ASC").Limit(limit).Find(&zones).Error
 	return zones, err
 }
 

@@ -10,16 +10,14 @@ import {
   FileDoneOutlined,
   LoginOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { setAuth } from "@/lib/auth";
+import { apiClient } from "@/lib/api-client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 const { Title, Text } = Typography;
 
 type LoginResponse = {
-  access_token: string;
-  token_type: string;
   user: {
     id: number;
     name: string;
@@ -59,8 +57,8 @@ export default function LoginPage() {
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
-      const { data } = await axios.post<LoginResponse>(`${API_URL}/auth/login`, values);
-      setAuth(data.access_token, data.user);
+      const { data } = await apiClient.post<LoginResponse>(`${API_URL}/auth/login`, values);
+      setAuth("", data.user);
       message.success("Login successful");
       router.replace("/overview");
     } catch (error: any) {

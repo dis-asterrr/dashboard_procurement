@@ -17,9 +17,14 @@ import {
   UserAddOutlined,
 } from "@ant-design/icons";
 import { clearAuth, getAuthUser } from "@/lib/auth";
+import { apiClient } from "@/lib/api-client";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
 const { Sider } = Layout;
 const { Text } = Typography;
+const BRAND_ICON_SIZE = 24;
+const BRAND_ICON_FRAME = 36;
 
 export const CustomSider = ({ collapsed, onCollapse }: { collapsed: boolean, onCollapse: (val: boolean) => void }) => {
   const pathname = usePathname();
@@ -129,11 +134,13 @@ export const CustomSider = ({ collapsed, onCollapse }: { collapsed: boolean, onC
           flexShrink: 0,
           transition: "all 0.2s"
         }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--ant-color-text)", flexShrink: 0 }}>
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-            <line x1="12" y1="22.08" x2="12" y2="12"></line>
-          </svg>
+          <div style={{ width: BRAND_ICON_FRAME, height: BRAND_ICON_FRAME, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width={BRAND_ICON_SIZE} height={BRAND_ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--ant-color-text)", flexShrink: 0 }}>
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
           <span style={{ 
             display: "inline-block",
             fontSize: "20px", fontWeight: 700, color: "var(--ant-color-text)", 
@@ -181,9 +188,13 @@ export const CustomSider = ({ collapsed, onCollapse }: { collapsed: boolean, onC
               type="text" 
               icon={<LogoutOutlined style={{ fontSize: '18px', color: '#ef4444' }} />} 
               title="Logout"
-              onClick={() => {
-                clearAuth();
-                router.push("/login");
+              onClick={async () => {
+                try {
+                  await apiClient.post(`${API_URL}/auth/logout`);
+                } finally {
+                  clearAuth();
+                  router.push("/login");
+                }
               }}
               style={{ 
                 width: collapsed ? "40px" : "100%", 

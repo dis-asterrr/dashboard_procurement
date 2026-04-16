@@ -3,7 +3,9 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
+	"rygell-dashboard/internal/config"
 	"rygell-dashboard/internal/models"
 	"rygell-dashboard/internal/services"
 
@@ -13,10 +15,11 @@ import (
 // AuthHandler handles login and current-user requests.
 type AuthHandler struct {
 	userService *services.UserService
+	cfg         *config.Config
 }
 
-func NewAuthHandler(userService *services.UserService) *AuthHandler {
-	return &AuthHandler{userService: userService}
+func NewAuthHandler(userService *services.UserService, cfg *config.Config) *AuthHandler {
+	return &AuthHandler{userService: userService, cfg: cfg}
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -32,15 +35,20 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	h.setAuthCookie(c, token)
+
 	c.JSON(http.StatusOK, gin.H{
-		"access_token": token,
-		"token_type":   "Bearer",
 		"user": gin.H{
 			"id":       user.ID,
 			"name":     user.Name,
 			"username": user.Username,
 		},
 	})
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	h.clearAuthCookie(c)
+	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
 
 func (h *AuthHandler) Me(c *gin.Context) {
@@ -192,4 +200,42 @@ func (h *AuthHandler) UpdateUserPassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "password updated"})
+}
+
+func (h *AuthHandler) setAuthCookie(c *gin.Context, token string) {
+	if h.cfg == nil {
+		return
+	}
+	sameSite := http.SameSiteLaxMode
+	switch strings.ToLower(strings.TrimSpace(h.cfg.CookieSameSite)) {
+	case "strict":
+		sameSite = http.SameSiteStrictMode
+	case "none":
+		sameSite = http.SameSiteNoneMode
+	}
+	secure := h.cfg.CookieSecure || sameSite == http.SameSiteNoneMode
+	maxAge := 60 * 60 * 24
+	if h.cfg.JWTExpiryHours != "" {
+		if hours, err := strconv.Atoi(h.cfg.JWTExpiryHours); err == nil && hours > 0 {
+			maxAge = hours * 60 * 60
+		}
+	}
+	c.SetSameSite(sameSite)
+	c.SetCookie(h.cfg.CookieName, token, maxAge, "/", h.cfg.CookieDomain, secure, true)
+}
+
+func (h *AuthHandler) clearAuthCookie(c *gin.Context) {
+	if h.cfg == nil {
+		return
+	}
+	sameSite := http.SameSiteLaxMode
+	switch strings.ToLower(strings.TrimSpace(h.cfg.CookieSameSite)) {
+	case "strict":
+		sameSite = http.SameSiteStrictMode
+	case "none":
+		sameSite = http.SameSiteNoneMode
+	}
+	secure := h.cfg.CookieSecure || sameSite == http.SameSiteNoneMode
+	c.SetSameSite(sameSite)
+	c.SetCookie(h.cfg.CookieName, "", -1, "/", h.cfg.CookieDomain, secure, true)
 }

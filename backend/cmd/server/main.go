@@ -14,15 +14,33 @@ import (
 )
 
 func main() {
-	// Load .env file (try local over relative path)
-	if err := godotenv.Load(); err != nil {
-		_ = godotenv.Load("../../.env")
+	// Prefer real local env files; fallback to .env.example only for dev convenience.
+	loadedEnv := false
+	for _, envPath := range []string{".env", "../../.env"} {
+		if err := godotenv.Load(envPath); err == nil {
+			loadedEnv = true
+			break
+		}
+	}
+	if !loadedEnv {
+		log.Println("WARN: No .env file found, falling back to .env.example (dev only)")
+		_ = godotenv.Load("../../.env.example")
 	}
 
 	// Load configuration
 	cfg := config.Load()
-	if strings.TrimSpace(cfg.JWTSecret) == "" || cfg.JWTSecret == "change_me" || cfg.JWTSecret == "rygell_super_secret_change_me" {
-		log.Fatalf("Invalid JWT_SECRET: set a strong non-default value")
+
+	// Validate JWT_SECRET: must not be empty, must not be a known default, must be >= 32 chars.
+	jwtTrimmed := strings.TrimSpace(cfg.JWTSecret)
+	knownDefaults := []string{"", "change_me", "rygell_super_secret_change_me", "abcdefghijk",
+		"change_me_to_a_strong_random_secret_at_least_32_chars"}
+	for _, def := range knownDefaults {
+		if jwtTrimmed == def {
+			log.Fatalf("Invalid JWT_SECRET: set a strong non-default value (at least 32 characters)")
+		}
+	}
+	if len(jwtTrimmed) < 32 {
+		log.Fatalf("JWT_SECRET is too short (%d chars): must be at least 32 characters", len(jwtTrimmed))
 	}
 
 	// Connect to database
@@ -36,18 +54,18 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	// Ensure default admin account exists
+	// Ensure default admin account exists (and optionally sync password)
 	userRepo := repositories.NewUserRepository(db)
 	totalUsers, err := userRepo.Count()
 	if err != nil {
 		log.Fatalf("Failed to count existing users: %v", err)
 	}
-	if totalUsers == 0 && (strings.TrimSpace(cfg.AdminPassword) == "" || cfg.AdminPassword == "admin123" || cfg.AdminPassword == "change_me") {
-		log.Fatalf("Invalid ADMIN_PASSWORD: set a strong non-default value for initial admin bootstrap")
+	if (totalUsers == 0 || cfg.AdminSyncPassword) && (strings.TrimSpace(cfg.AdminPassword) == "" || cfg.AdminPassword == "admin123" || cfg.AdminPassword == "change_me") {
+		log.Fatalf("Invalid ADMIN_PASSWORD: set a strong non-default value for admin bootstrap/sync")
 	}
 
 	userService := services.NewUserService(userRepo, cfg.JWTSecret, cfg.JWTExpiryHours)
-	if err := userService.EnsureDefaultAdmin(cfg.AdminName, cfg.AdminUsername, cfg.AdminPassword); err != nil {
+	if err := userService.EnsureDefaultAdminWithSync(cfg.AdminName, cfg.AdminUsername, cfg.AdminPassword, cfg.AdminSyncPassword); err != nil {
 		log.Fatalf("Failed to ensure default admin user: %v", err)
 	}
 

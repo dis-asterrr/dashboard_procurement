@@ -27,13 +27,21 @@ func CORSMiddleware(cfg *config.Config) gin.HandlerFunc {
 		}
 	}
 
+	allowWildcard := false
+	for _, origin := range origins {
+		if strings.Contains(origin, "*") {
+			allowWildcard = true
+			break
+		}
+	}
+
 	return cors.New(cors.Config{
 		AllowOrigins:     origins,
-		AllowWildcard:    true,
+		AllowWildcard:    allowWildcard,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Disposition", "X-Total-Count"},
-		AllowCredentials: true,
+		AllowCredentials: !allowWildcard,
 		MaxAge:           12 * time.Hour,
 	})
 }

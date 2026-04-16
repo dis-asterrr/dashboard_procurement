@@ -11,7 +11,7 @@ import dataProvider from "@refinedev/simple-rest";
 import { usePathname, useRouter } from "next/navigation";
 
 import { CustomLayout } from "@/components/layout";
-import { clearAuth, getToken } from "@/lib/auth";
+import { clearAuth } from "@/lib/auth";
 import { apiClient } from "@/lib/api-client";
 import AppSpinner from "@/components/common/app-spinner";
 
@@ -24,31 +24,44 @@ export default function RefineProvider({ children }: { children: React.ReactNode
   const isLoginPage = pathname === "/login";
 
   useEffect(() => {
-    const token = getToken();
-    if (!token && !isLoginPage) {
-      router.replace("/login");
-      return;
-    }
-    if (token && isLoginPage) {
-      router.replace("/overview");
-      return;
-    }
-    setCheckingAuth(false);
+    let cancelled = false;
+    const checkSession = async () => {
+      try {
+        await apiClient.get(`${API_URL}/auth/me`);
+        if (!cancelled && isLoginPage) {
+          router.replace("/overview");
+          return;
+        }
+      } catch {
+        if (!cancelled && !isLoginPage) {
+          router.replace("/login");
+          return;
+        }
+      } finally {
+        if (!cancelled) setCheckingAuth(false);
+      }
+    };
+    void checkSession();
+    return () => {
+      cancelled = true;
+    };
   }, [isLoginPage, router]);
 
   const authProvider = useMemo(
     () => ({
       login: async () => ({ success: true }),
       logout: async () => {
+        await apiClient.post(`${API_URL}/auth/logout`);
         clearAuth();
         return { success: true, redirectTo: "/login" };
       },
       check: async () => {
-        const token = getToken();
-        if (token) {
+        try {
+          await apiClient.get(`${API_URL}/auth/me`);
           return { authenticated: true };
+        } catch {
+          return { authenticated: false, redirectTo: "/login", logout: true };
         }
-        return { authenticated: false, redirectTo: "/login", logout: true };
       },
       getPermissions: async () => null,
       getIdentity: async () => null,
